@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/lib/prisma'
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin-secret'
 
@@ -37,9 +35,14 @@ export async function POST(req: Request) {
           }
         })
 
-        // Create or update token
+        // Create or update token in our internal system
         const token = await prisma.token.upsert({
-          where: { symbol },
+          where: { 
+            walletId_symbol: {
+              walletId: wallet.id,
+              symbol: symbol
+            }
+          },
           update: {
             price: parseFloat(price),
             balance: {
@@ -56,7 +59,7 @@ export async function POST(req: Request) {
           }
         })
 
-        // Record the injection
+        // Record the injection in our internal system
         const injection = await prisma.tokenInjection.create({
           data: {
             tokenId: token.id,
@@ -90,7 +93,7 @@ export async function POST(req: Request) {
           error: 'Invalid action'
         }, { status: 400 })
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Admin API error:', error)
     return NextResponse.json({
       success: false,
@@ -111,6 +114,7 @@ export async function GET(req: Request) {
       }, { status: 401 })
     }
 
+    // Get internal system data
     const [tokens, injections] = await Promise.all([
       prisma.token.findMany({
         where: { isForced: true }

@@ -2,7 +2,6 @@
 /node_modules
 /.pnp
 .pnp.js
-.yarn/install-state.gz
 
 # testing
 /coverage
@@ -24,8 +23,11 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -34,6 +36,19 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# database
-*.db
-*.db-journal
+# IDE
+.idea/
+.vscode/
+
+# Prisma
+/prisma/migrations/
+/prisma/*.db
+/prisma/*.db-journal
+
+# Logs
+logs
+*.log
+
+# Build artifacts
+dist/
+build/

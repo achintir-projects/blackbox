@@ -1,36 +1,142 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wallet dApp
 
-## Getting Started
+A modern web3 wallet application built with Next.js, Prisma, and Ethereum.
 
-First, run the development server:
+## Features
 
+- Create and import Ethereum wallets
+- View and manage tokens
+- Send and receive transactions
+- Modern, responsive UI with dark theme
+- Secure key management
+- Real-time transaction updates
+
+## Tech Stack
+
+- Next.js 14
+- TypeScript
+- Prisma (PostgreSQL)
+- Ethers.js
+- Tailwind CSS
+- shadcn/ui Components
+
+## Prerequisites
+
+- Node.js >= 18
+- PostgreSQL
+- Ethereum wallet/provider (e.g., MetaMask)
+
+## Environment Setup
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd wallet-dapp
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Create a `.env` file in the root directory with the following variables:
+```env
+# Database URL for Prisma
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/wallet_db?schema=public"
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Ethereum Network Configuration
+NEXT_PUBLIC_NETWORK_NAME="sepolia"
+NEXT_PUBLIC_RPC_URL="https://sepolia.infura.io/v3/your-infura-id"
+NEXT_PUBLIC_CHAIN_ID="11155111"
 
-## Learn More
+# Contract Addresses
+NEXT_PUBLIC_USDT_CONTRACT="0xYourUSDTContractAddress"
 
-To learn more about Next.js, take a look at the following resources:
+# API Configuration
+NEXT_PUBLIC_API_URL="http://localhost:8000"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Security
+JWT_SECRET="your-jwt-secret-key"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Port Configuration
+PORT=8000
+```
 
-## Deploy on Vercel
+4. Initialize the database:
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Run the development server:
+```bash
+npm run dev
+```
+
+## Deployment
+
+### Heroku
+
+1. Create a new Heroku app:
+```bash
+heroku create your-app-name
+```
+
+2. Add PostgreSQL addon:
+```bash
+heroku addons:create heroku-postgresql:hobby-dev
+```
+
+3. Set environment variables:
+```bash
+heroku config:set NEXT_PUBLIC_NETWORK_NAME=sepolia
+heroku config:set NEXT_PUBLIC_RPC_URL=your-infura-url
+heroku config:set NEXT_PUBLIC_CHAIN_ID=11155111
+heroku config:set NEXT_PUBLIC_USDT_CONTRACT=your-contract-address
+heroku config:set JWT_SECRET=your-jwt-secret
+```
+
+4. Deploy:
+```bash
+git push heroku main
+```
+
+### Vercel
+
+1. Import your GitHub repository in Vercel
+2. Configure environment variables in the Vercel dashboard
+3. Deploy
+
+## Production Considerations
+
+1. **Database Migration**: Always run migrations before deploying:
+```bash
+npx prisma migrate deploy
+```
+
+2. **Environment Variables**: Ensure all required environment variables are set in your deployment platform.
+
+3. **Security**:
+   - Use secure JWT secrets
+   - Enable HTTPS
+   - Implement rate limiting
+   - Regular security audits
+
+4. **Monitoring**:
+   - Set up error tracking (e.g., Sentry)
+   - Monitor API endpoints
+   - Track transaction success rates
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

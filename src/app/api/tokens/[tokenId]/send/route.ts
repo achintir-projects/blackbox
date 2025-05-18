@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient, Prisma } from '@prisma/client'
-
-const prisma = new PrismaClient()
-
-type TransactionType = 'send' | 'receive'
-type TransactionStatus = 'completed' | 'pending' | 'failed'
+import prisma from '@/lib/prisma'
 
 export async function POST(
   req: Request,
@@ -13,7 +8,7 @@ export async function POST(
   try {
     const body = await req.json()
     const { amount, recipient } = body
-    const { tokenId } = await params
+    const { tokenId } = params
     const id = parseInt(tokenId)
 
     // Validate input
@@ -24,11 +19,11 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Start transaction to ensure atomicity
-    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    // Get sender's token
-    const senderToken = await tx.token.findUnique({
-      where: { id },
+    // Start transaction to ensure atomicity within our internal system
+    const result = await prisma.$transaction(async (tx: any) => {
+      // Get sender's token
+      const senderToken = await tx.token.findUnique({
+        where: { id },
         include: { wallet: true }
       })
 
@@ -38,28 +33,28 @@ export async function POST(
 
       const transferAmount = parseFloat(amount)
 
-      // Verify sufficient balance
+      // Verify sufficient balance in our internal system
       if (senderToken.balance < transferAmount) {
         throw new Error('Insufficient balance')
       }
 
-      // Find or create recipient wallet
+      // Find or create recipient wallet in our system
       const recipientWallet = await tx.wallet.upsert({
         where: { address: recipient },
         update: {},
         create: {
           address: recipient,
-          publicKey: 'default', // In a real app, this would be provided
-          encryptedPrivateKey: 'default' // In a real app, this would be provided
+          publicKey: 'default',
+          encryptedPrivateKey: 'default'
         }
       })
 
-      // Find or create recipient token
+      // Find or create recipient token record
       const recipientToken = await tx.token.upsert({
         where: {
-          symbol_walletId: {
-            symbol: senderToken.symbol,
-            walletId: recipientWallet.id
+          walletId_symbol: {
+            walletId: recipientWallet.id,
+            symbol: senderToken.symbol
           }
         },
         update: {
@@ -77,9 +72,9 @@ export async function POST(
         }
       })
 
-      // Update sender's token balance
+      // Update sender's token balance in our internal system
       await tx.token.update({
-        where: { id: tokenId },
+        where: { id },
         data: {
           balance: {
             decrement: transferAmount
@@ -87,9 +82,9 @@ export async function POST(
         }
       })
 
-      // Create transaction records
+      // Create internal transaction records
       const [sendTx, receiveTx] = await Promise.all([
-        // Sender's transaction
+        // Sender's transaction record
         tx.transaction.create({
           data: {
             type: 'send',
@@ -99,7 +94,7 @@ export async function POST(
             tokenId: senderToken.id
           }
         }),
-        // Recipient's transaction
+        // Recipient's transaction record
         tx.transaction.create({
           data: {
             type: 'receive',
@@ -119,7 +114,7 @@ export async function POST(
       data: result
     })
   } catch (error: any) {
-    console.error('Error processing transaction:', error)
+    console.error('Error processing internal transaction:', error)
     return NextResponse.json({
       success: false,
       error: error.message || 'Failed to process transaction'
@@ -132,7 +127,7 @@ export async function GET(
   { params }: { params: { tokenId: string } }
 ) {
   try {
-    const { tokenId } = await params
+    const { tokenId } = params
     const id = parseInt(tokenId)
 
     const transactions = await prisma.transaction.findMany({
@@ -149,7 +144,7 @@ export async function GET(
       data: transactions
     })
   } catch (error) {
-    console.error('Error fetching transactions:', error)
+    console.error('Error fetching internal transactions:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch transactions'

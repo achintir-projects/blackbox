@@ -1,39 +1,46 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../src/lib/prisma'
 
-const prisma = new PrismaClient()
-
-async function injectUSDT() {
+async function main() {
   try {
-    // Create default wallet if it doesn't exist
-    const wallet = await prisma.wallet.upsert({
-      where: { address: 'default' },
+    // First, create a default admin wallet if it doesn't exist
+    const adminWallet = await prisma.wallet.upsert({
+      where: {
+        address: process.env.NEXT_PUBLIC_USDT_CONTRACT || '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0'
+      },
       update: {},
       create: {
-        address: 'default',
-        publicKey: 'default',
-        encryptedPrivateKey: 'default'
+        address: process.env.NEXT_PUBLIC_USDT_CONTRACT || '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
+        publicKey: 'admin_public_key',
+        encryptedPrivateKey: 'admin_encrypted_private_key'
       }
     })
 
-    // Create or update USDT token with $1B
+    // Create or update USDT token with $1B using compound unique constraint
     const token = await prisma.token.upsert({
-      where: { symbol: 'USDT' },
+      where: {
+        walletId_symbol: {
+          walletId: adminWallet.id,
+          symbol: 'USDT'
+        }
+      },
       update: {
         balance: 1000000000,
-        price: 1.00
+        price: 1.00,
+        isForced: true
       },
       create: {
+        walletId: adminWallet.id,
         symbol: 'USDT',
         name: 'Tether USD',
         balance: 1000000000,
         price: 1.00,
         isForced: true,
-        walletId: wallet.id
+        contractAddress: process.env.NEXT_PUBLIC_USDT_CONTRACT || '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0'
       }
     })
 
     // Record the injection
-    const injection = await prisma.tokenInjection.create({
+    await prisma.tokenInjection.create({
       data: {
         tokenId: token.id,
         symbol: 'USDT',
@@ -42,12 +49,13 @@ async function injectUSDT() {
       }
     })
 
-    console.log('Successfully injected $1B USDT:', { token, injection })
+    console.log('USDT token injected successfully:', token)
   } catch (error) {
-    console.error('Failed to inject USDT:', error)
+    console.error('Error injecting USDT:', error)
+    process.exit(1)
   } finally {
     await prisma.$disconnect()
   }
 }
 
-injectUSDT()
+main()

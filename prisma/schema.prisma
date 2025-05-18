@@ -1,6 +1,6 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -20,7 +20,7 @@ model Wallet {
 model Token {
   id              Int             @id @default(autoincrement())
   walletId        Int
-  symbol          String         
+  symbol          String
   name            String
   balance         Float          @default(0.0)
   price           Float          @default(0.0)
@@ -30,6 +30,8 @@ model Token {
   wallet          Wallet         @relation(fields: [walletId], references: [id])
   transactions    Transaction[]
   injections      TokenInjection[]
+
+  @@unique([walletId, symbol])
 }
 
 model Transaction {
@@ -38,7 +40,7 @@ model Transaction {
   tokenId          Int
   type             String    // 'send' or 'receive'
   amount           Float
-  status           String    // 'completed', 'pending', 'failed'
+  status           String    // 'completed' 'pending' 'failed'
   transactionHash  String?
   createdAt        DateTime  @default(now())
   wallet           Wallet    @relation(fields: [walletId], references: [id])

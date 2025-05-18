@@ -19,16 +19,16 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-[#2b2f45] text-white min-h-screen`}>
+      <body className={`${inter.className} min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-900 to-neutral-800`}>
         {showNav && (
-          <nav className="border-b border-[#363b57]">
+          <nav className="border-b border-neutral-800">
             <NavigationMenu className="max-w-screen-xl mx-auto px-4">
               <NavigationMenuList className="flex gap-6 h-16 items-center">
                 <NavigationMenuItem>
                   <Link 
                     href="/tokens" 
-                    className={`hover:text-gray-300 transition-colors ${
-                      pathname === "/tokens" ? "text-blue-500" : ""
+                    className={`hover:text-neutral-300 transition-colors ${
+                      pathname === "/tokens" ? "text-blue-500" : "text-neutral-400"
                     }`}
                   >
                     Home
@@ -37,10 +37,10 @@ export default function RootLayout({
                 <NavigationMenuItem>
                   <Link 
                     href="/tokens" 
-                    className={`hover:text-gray-300 transition-colors ${
+                    className={`hover:text-neutral-300 transition-colors ${
                       pathname.startsWith("/tokens") && pathname !== "/tokens" 
                         ? "text-blue-500" 
-                        : ""
+                        : "text-neutral-400"
                     }`}
                   >
                     Tokens
@@ -49,8 +49,8 @@ export default function RootLayout({
                 <NavigationMenuItem>
                   <Link 
                     href="/settings" 
-                    className={`hover:text-gray-300 transition-colors ${
-                      pathname === "/settings" ? "text-blue-500" : ""
+                    className={`hover:text-neutral-300 transition-colors ${
+                      pathname === "/settings" ? "text-blue-500" : "text-neutral-400"
                     }`}
                   >
                     Settings
@@ -67,9 +67,9 @@ export default function RootLayout({
           position="top-right"
           toastOptions={{
             style: {
-              background: "#363b57",
-              color: "#fff",
-              border: "1px solid #404663"
+              background: "#1f2937",
+              color: "#f3f4f6",
+              border: "1px solid #374151"
             }
           }}
         />
