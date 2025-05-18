@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
 import { ethers } from 'ethers'
+import { initUserWallet } from '@/lib/init-user-wallet'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export async function POST(req: Request) {
   try {
@@ -7,14 +11,30 @@ export async function POST(req: Request) {
     const { action, privateKey } = body
 
     if (action === 'create') {
-      // Create a new wallet
-      const wallet = ethers.Wallet.createRandom()
+      // Create a new wallet with timestamp-based entropy
+      const timestamp = Date.now().toString()
+      const entropy = ethers.utils.id(timestamp + Math.random())
+      const wallet = ethers.Wallet.createRandom({ entropy })
+      
+      // Check if wallet already exists
+      const existingWallet = await prisma.wallet.findUnique({
+        where: { address: wallet.address }
+      })
+
+      if (existingWallet) {
+        return NextResponse.json({
+          success: false,
+          error: 'Please try again'
+        }, { status: 400 })
+      }
+
+      // Initialize wallet with zero-balance tokens
+      await initUserWallet(wallet.address, wallet.publicKey, wallet.privateKey)
       
       return NextResponse.json({
         success: true,
         data: {
           address: wallet.address,
-          // In a real app, you'd want to encrypt this before sending
           privateKey: wallet.privateKey,
         }
       })
@@ -25,6 +45,15 @@ export async function POST(req: Request) {
       try {
         const wallet = new ethers.Wallet(privateKey)
         
+        // Initialize wallet if it doesn't exist
+        const existingWallet = await prisma.wallet.findUnique({
+          where: { address: wallet.address }
+        })
+
+        if (!existingWallet) {
+          await initUserWallet(wallet.address, wallet.publicKey, wallet.privateKey)
+        }
+
         return NextResponse.json({
           success: true,
           data: {
@@ -51,5 +80,7 @@ export async function POST(req: Request) {
       success: false,
       error: 'Internal server error'
     }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }

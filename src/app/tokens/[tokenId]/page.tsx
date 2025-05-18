@@ -26,12 +26,11 @@ interface TokenDetails {
 }
 
 const tokenIcons: Record<string, string> = {
-  'USDT': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
-  'TRON': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/trx.png',
-  'BTC': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png',
-  'BNB': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png',
-  'SOL': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/sol.png',
-  'XRP': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xrp.png'
+  'USDT': '/icons/usdt.svg',
+  'BTC': '/icons/btc.svg',
+  'ETH': '/icons/eth.svg',
+  'BNB': '/icons/bnb.svg',
+  'TRX': '/icons/trx.svg'
 }
 
 export default function TokenDetailsPage({ params }: { params: { tokenId: string } }) {
@@ -85,11 +84,11 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
         Back
       </Button>
 
-      <Card className="bg-[#2b2f45] border-0">
+      <Card className="bg-white border border-gray-200 shadow-sm rounded-xl">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="relative w-12 h-12 bg-white rounded-full overflow-hidden">
+              <div className="relative w-12 h-12 bg-white rounded-full overflow-hidden p-2 border border-gray-100">
                 <Image
                   src={tokenIcons[token.symbol] || tokenIcons['USDT']}
                   alt={`${token.symbol} icon`}
@@ -99,34 +98,31 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
                 />
               </div>
               <div>
-                <h1 className="text-2xl">{token.symbol}</h1>
-                <p className="text-sm text-gray-400">{token.name}</p>
+                <h1 className="text-2xl text-gray-900">{token.symbol}</h1>
+                <p className="text-sm text-gray-600">{token.name}</p>
               </div>
             </div>
-            {token.isForced && (
-              <span className="text-xs bg-blue-500 px-2 py-1 rounded">Forced</span>
-            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
-            <p className="text-3xl font-bold">
+            <p className="text-3xl font-bold text-gray-900">
               {token.balance.toLocaleString()} {token.symbol}
             </p>
-            <p className="text-gray-400">
+            <p className="text-gray-600">
               ${(token.balance * token.price).toLocaleString()} USD
             </p>
           </div>
 
           <div className="flex gap-4">
             <Button 
-              className="flex-1 bg-blue-600 hover:bg-blue-700" 
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white shadow-sm" 
               onClick={handleSend}
             >
               Send
             </Button>
             <Button 
-              className="flex-1" 
+              className="flex-1 border-gray-300 hover:bg-gray-50 text-gray-700" 
               variant="outline"
               onClick={handleReceive}
             >
@@ -135,16 +131,16 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Recent Transactions</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Recent Transactions</h2>
             <div className="space-y-2">
               {token.transactions.map((tx) => (
                 <div 
                   key={tx.id}
-                  className="flex justify-between items-center p-3 rounded-lg bg-[#363b57] hover:bg-[#404663] transition-colors"
+                  className="flex justify-between items-center p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
                   <div>
-                    <p className="capitalize">{tx.type}</p>
-                    <p className="text-sm text-gray-400">
+                    <p className="capitalize text-gray-900">{tx.type}</p>
+                    <p className="text-sm text-gray-500">
                       {new Date(tx.createdAt).toLocaleString()}
                     </p>
                   </div>
@@ -152,14 +148,14 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
                     <p className={tx.type === 'receive' ? 'text-green-500' : 'text-red-500'}>
                       {tx.type === 'receive' ? '+' : '-'}{tx.amount.toLocaleString()} {token.symbol}
                     </p>
-                    <p className="text-sm text-gray-400 font-mono">
+                    <p className="text-sm text-gray-500 font-mono">
                       {tx.wallet.address.slice(0, 6)}...{tx.wallet.address.slice(-4)}
                     </p>
                   </div>
                 </div>
               ))}
               {token.transactions.length === 0 && (
-                <div className="text-center text-gray-400 py-4">
+                <div className="text-center text-gray-500 py-6">
                   No transactions yet
                 </div>
               )}
