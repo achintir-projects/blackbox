@@ -10,11 +10,27 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
   images: {
-    domains: [
-      'images.unsplash.com',
-      'images.pexels.com',
-      'images.cryptocompare.com',
-      'cryptocompare.com'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.cryptocompare.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.cryptocompare.com',
+        pathname: '/**',
+      }
     ],
     minimumCacheTTL: 60,
   },
