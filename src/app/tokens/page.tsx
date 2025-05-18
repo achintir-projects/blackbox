@@ -15,6 +15,7 @@ interface Token {
   name: string
   balance: string
   price: number
+  priceChange24h?: number
   isForced?: boolean
   icon: string
 }
@@ -177,6 +178,16 @@ export default function TokensPage() {
               <div className="flex-1">
                 <CardTitle className="flex justify-between items-center">
                   <span>{token.symbol}</span>
+                  {token.priceChange24h !== undefined && (
+                    <span
+                      className={`text-sm font-medium ${
+                        token.priceChange24h >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}
+                    >
+                      {token.priceChange24h >= 0 ? '+' : ''}
+                      {token.priceChange24h.toFixed(2)}%
+                    </span>
+                  )}
                 </CardTitle>
                 <p className="text-sm text-gray-400">{token.name}</p>
               </div>

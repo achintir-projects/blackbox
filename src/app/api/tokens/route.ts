@@ -49,12 +49,13 @@ export async function GET(req: Request) {
     // Update prices for non-forced tokens
     const updatedTokens = await Promise.all(
       tokens.map(async (token: Token) => {
-        if (!token.isForced) {
+        if (!token.isForced && token.symbol !== 'USDT') {
           try {
             const response = await axios.get(
-              `https://api.coingecko.com/api/v3/simple/price?ids=${token.symbol.toLowerCase()}&vs_currencies=usd`
+              `https://api.coingecko.com/api/v3/simple/price?ids=${token.symbol.toLowerCase()}&vs_currencies=usd&include_24hr_change=true`
             )
             const price = response.data[token.symbol.toLowerCase()]?.usd
+            const change = response.data[token.symbol.toLowerCase()]?.usd_24h_change
             if (price) {
               await prisma.token.update({
                 where: { id: token.id },
@@ -62,14 +63,26 @@ export async function GET(req: Request) {
               })
               token.price = price
             }
+            return {
+              ...token,
+              priceChange24h: change,
+              balance: token.balance.toString(),
+              id: token.id.toString()
+            }
           } catch (error) {
             console.error(`Failed to fetch price for ${token.symbol}:`, error)
+            return {
+              ...token,
+              balance: token.balance.toString(),
+              id: token.id.toString()
+            }
           }
-        }
-        return {
-          ...token,
-          balance: token.balance.toString(),
-          id: token.id.toString()
+        } else {
+          return {
+            ...token,
+            balance: token.balance.toString(),
+            id: token.id.toString()
+          }
         }
       })
     )

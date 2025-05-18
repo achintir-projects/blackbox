@@ -17,10 +17,10 @@ export default function ReceiveTokenPage({ params }: { params: { tokenId: string
   const [token, setToken] = useState<TokenInfo>({ symbol: "", walletAddress: "" })
 
   useEffect(() => {
-    // In a real app, fetch wallet address from your backend
+    const walletAddress = localStorage.getItem('walletAddress') || ''
     setToken({
       symbol: "USDT",
-      walletAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+      walletAddress
     })
   }, [])
 
