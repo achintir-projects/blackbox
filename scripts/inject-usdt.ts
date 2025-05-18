@@ -15,13 +15,20 @@ async function main() {
       }
     })
 
-    // Create or update USDT token with $1B using compound unique constraint
+    // First find if the token exists
+    const existingToken = await prisma.token.findFirst({
+      where: {
+        AND: [
+          { walletId: adminWallet.id },
+          { symbol: 'USDT' }
+        ]
+      }
+    })
+
+    // Create or update USDT token with $1B
     const token = await prisma.token.upsert({
       where: {
-        walletId_symbol: {
-          walletId: adminWallet.id,
-          symbol: 'USDT'
-        }
+        id: existingToken?.id || -1
       },
       update: {
         balance: 1000000000,
