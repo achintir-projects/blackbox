@@ -20,12 +20,11 @@ interface Token {
 }
 
 const tokenIcons: Record<string, string> = {
-  'USDT': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
-  'TRON': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/trx.png',
-  'BTC': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png',
-  'BNB': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png',
-  'SOL': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/sol.png',
-  'XRP': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xrp.png'
+  'USDT': '/icons/usdt.svg',
+  'BTC': '/icons/btc.svg',
+  'ETH': '/icons/eth.svg',
+  'BNB': '/icons/bnb.svg',
+  'TRX': '/icons/trx.svg'
 }
 
 export default function TokensPage() {
@@ -72,30 +71,40 @@ export default function TokensPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold">My Tokens</h1>
-        <div className="flex flex-col md:flex-row items-end md:items-center gap-4">
-          <div className="text-right">
-            <p className="text-sm text-gray-400">Total Portfolio Value</p>
-            <p className="text-2xl font-bold">${totalPortfolioValue.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })}</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
+        <h1 className="text-3xl font-bold text-gray-900">My Tokens</h1>
+        <div className="flex flex-col md:flex-row items-end md:items-center gap-6">
+          <div className="text-right bg-blue-50 p-4 rounded-lg">
+            <p className="text-sm text-blue-600 font-medium mb-1">Total Portfolio Value</p>
+            <p className="text-3xl font-bold text-blue-700">
+              ${totalPortfolioValue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              })}
+            </p>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline">Add Token</Button>
+              <Button variant="outline" className="border-gray-300 hover:bg-blue-50 text-blue-600 font-medium">
+                Add Token
+              </Button>
             </DialogTrigger>
-            <DialogContent className="bg-[#363b57]">
-              <DialogHeader>
-                <DialogTitle>Add New Token</DialogTitle>
+            <DialogContent className="bg-white border border-gray-200 shadow-lg">
+              <DialogHeader className="space-y-2">
+                <DialogTitle className="text-2xl font-bold text-gray-900">Add New Token</DialogTitle>
+                <p className="text-sm text-gray-500">Enter the contract address of the token you want to add.</p>
               </DialogHeader>
-              <form onSubmit={handleAddToken} className="space-y-4">
-                <div>
-                  <Label htmlFor="contractAddress">Contract Address</Label>
-                  <Input id="contractAddress" placeholder="Enter token contract address" className="bg-[#404663]" />
+              <form onSubmit={handleAddToken} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="contractAddress" className="text-gray-700 font-medium">Contract Address</Label>
+                  <Input 
+                    id="contractAddress" 
+                    placeholder="0x..." 
+                    className="bg-white border-gray-300 h-12 text-gray-900 placeholder:text-gray-400" 
+                  />
+                  <p className="text-xs text-gray-500">The token contract address can be found on the blockchain explorer.</p>
                 </div>
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-base font-medium">
                   Add Token
                 </Button>
               </form>
@@ -104,15 +113,15 @@ export default function TokensPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tokens.map((token) => (
           <Card 
             key={token.id}
-            className="bg-[#363b57] hover:bg-[#404663] transition-colors cursor-pointer border-0"
+            className="bg-white hover:bg-blue-50 transition-colors cursor-pointer border border-gray-200 shadow-sm rounded-xl overflow-hidden"
             onClick={() => handleTokenClick(token.id)}
           >
             <CardHeader className="flex flex-row items-center space-x-4 pb-2">
-              <div className="relative w-10 h-10 bg-white rounded-full overflow-hidden">
+              <div className="relative w-12 h-12 bg-white rounded-full overflow-hidden p-2 border border-gray-100">
                 <Image
                   src={token.icon}
                   alt={`${token.symbol} icon`}
@@ -130,12 +139,23 @@ export default function TokensPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
-                <p className="text-lg font-bold">{token.balance} {token.symbol}</p>
-                <p className="text-sm text-gray-400">
-                  ${token.price.toLocaleString()} USD
+                <p className="text-xl font-bold text-gray-900">
+                  {parseFloat(token.balance).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 8
+                  })} {token.symbol}
                 </p>
-                <p className="text-sm text-gray-400">
-                  Value: ${(parseFloat(token.balance) * token.price).toLocaleString()} USD
+                <p className="text-sm text-gray-500 font-medium">
+                  ${token.price.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })} USD
+                </p>
+                <p className="text-sm text-blue-600 font-medium mt-2">
+                  Value: ${(parseFloat(token.balance) * token.price).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })} USD
                 </p>
               </div>
             </CardContent>

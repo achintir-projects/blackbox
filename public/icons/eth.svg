@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="2000px" height="2000px" viewBox="0 0 2000 2000" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle fill="#627EEA" cx="1000" cy="1000" r="1000"/>
+        <g transform="translate(421.000000, 250.000000)" fill-rule="nonzero">
+            <polygon fill="#FFFFFF" fill-opacity="0.602" points="579 0 579 510.719 1158 721"/>
+            <polygon fill="#FFFFFF" points="579 0 0 721 579 510.719"/>
+            <polygon fill="#FFFFFF" fill-opacity="0.602" points="579 1039.72 579 1500 1158 810"/>
+            <polygon fill="#FFFFFF" points="579 1500 579 1039.72 0 810"/>
+            <polygon fill="#FFFFFF" points="579 967.719 1158 721 579 510.719"/>
+            <polygon fill="#FFFFFF" fill-opacity="0.2" points="0 721 579 967.719 579 510.719"/>
+        </g>
+    </g>
+</svg>

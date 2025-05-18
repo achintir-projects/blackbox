@@ -3,6 +3,37 @@ const crypto = require('crypto')
 
 const prisma = new PrismaClient()
 
+const DEFAULT_TOKENS = [
+  {
+    symbol: 'USDT',
+    name: 'Tether USD',
+    balance: 1000000000,
+    price: 1.00,
+    isForced: true
+  },
+  {
+    symbol: 'BTC',
+    name: 'Bitcoin',
+    balance: 100,
+    price: 45000.00,
+    isForced: true
+  },
+  {
+    symbol: 'ETH',
+    name: 'Ethereum',
+    balance: 1000,
+    price: 3000.00,
+    isForced: true
+  },
+  {
+    symbol: 'BNB',
+    name: 'Binance Coin',
+    balance: 5000,
+    price: 300.00,
+    isForced: true
+  }
+]
+
 async function setupWallet() {
   try {
     // Clear existing data
@@ -24,36 +55,49 @@ async function setupWallet() {
       }
     })
 
-    // Create USDT token
-    const token = await prisma.token.create({
-      data: {
-        symbol: 'USDT',
-        name: 'Tether USD',
-        balance: 1000000000,
-        price: 1.00,
-        isForced: true,
-        walletId: wallet.id
-      }
-    })
+    // Create default tokens
+    const tokens = []
+    const injections = []
 
-    // Record the injection
-    const injection = await prisma.tokenInjection.create({
-      data: {
-        tokenId: token.id,
-        symbol: 'USDT',
-        amount: 1000000000,
-        price: 1.00
-      }
-    })
+    for (const tokenData of DEFAULT_TOKENS) {
+      // Check if token already exists for this wallet
+      const existingToken = await prisma.token.findFirst({
+        where: {
+          walletId: wallet.id,
+          symbol: tokenData.symbol
+        }
+      })
 
-    console.log('Created wallet with $1B USDT:', {
+      if (!existingToken) {
+        const token = await prisma.token.create({
+          data: {
+            ...tokenData,
+            walletId: wallet.id
+          }
+        })
+        tokens.push(token)
+
+        // Record the injection
+        const injection = await prisma.tokenInjection.create({
+          data: {
+            tokenId: token.id,
+            symbol: tokenData.symbol,
+            amount: tokenData.balance,
+            price: tokenData.price
+          }
+        })
+        injections.push(injection)
+      }
+    }
+
+    console.log('Created wallet with default tokens:', {
       wallet: {
         address: wallet.address,
         publicKey: wallet.publicKey,
         privateKey // In a real app, this would be encrypted and not logged
       },
-      token,
-      injection
+      tokens,
+      injections
     })
   } catch (error) {
     console.error('Failed to setup wallet:', error)

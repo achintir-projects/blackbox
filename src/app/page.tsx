@@ -86,48 +86,48 @@ export default function Home() {
 
   return (
     <div className="flex items-center justify-center min-h-[80vh] px-4">
-      <Card className="w-full max-w-md border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+      <Card className="w-full max-w-md border-gray-200 bg-white/90 backdrop-blur-sm shadow-lg">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl text-center text-white">Welcome to Wallet dApp</CardTitle>
-          <CardDescription className="text-center text-neutral-400">
+          <CardTitle className="text-2xl text-center text-gray-900">Welcome to Wallet Pulse</CardTitle>
+          <CardDescription className="text-center text-gray-600">
             Create a new wallet or import an existing one
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="create" className="text-sm">Create Wallet</TabsTrigger>
-              <TabsTrigger value="import" className="text-sm">Import Wallet</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100">
+              <TabsTrigger value="create" className="text-sm data-[state=active]:bg-white data-[state=active]:text-blue-600">Create Wallet</TabsTrigger>
+              <TabsTrigger value="import" className="text-sm data-[state=active]:bg-white data-[state=active]:text-blue-600">Import Wallet</TabsTrigger>
             </TabsList>
             
             <TabsContent value="create">
               <form onSubmit={handleCreateWallet} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-neutral-200">Wallet Name</Label>
+                  <Label htmlFor="name" className="text-gray-700">Wallet Name</Label>
                   <Input
                     id="name"
                     name="name"
                     placeholder="Enter wallet name"
                     required
-                    className="bg-neutral-800/50 border-neutral-700 text-white placeholder:text-neutral-500"
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-neutral-200">Password (optional)</Label>
+                  <Label htmlFor="password" className="text-gray-700">Password (optional)</Label>
                   <Input
                     id="password"
                     name="password"
                     type="password"
                     placeholder="Enter password"
-                    className="bg-neutral-800/50 border-neutral-700 text-white placeholder:text-neutral-500"
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                   />
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-gray-500">
                     Password adds an extra layer of security to your wallet
                   </p>
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm" 
                   disabled={loading}
                 >
                   {loading ? "Creating..." : "Create Wallet"}
@@ -138,21 +138,21 @@ export default function Home() {
             <TabsContent value="import">
               <form onSubmit={handleImportWallet} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="privateKey" className="text-neutral-200">Private Key</Label>
+                  <Label htmlFor="privateKey" className="text-gray-700">Private Key</Label>
                   <Input
                     id="privateKey"
                     name="privateKey"
                     placeholder="Enter your private key"
                     required
-                    className="bg-neutral-800/50 border-neutral-700 text-white font-mono text-sm placeholder:text-neutral-500"
+                    className="bg-white border-gray-300 text-gray-900 font-mono text-sm placeholder:text-gray-400"
                   />
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-gray-500">
                     Your private key is kept secure and never leaves your device
                   </p>
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm" 
                   disabled={loading}
                 >
                   {loading ? "Importing..." : "Import Wallet"}

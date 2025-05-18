@@ -19,16 +19,16 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-900 to-neutral-800`}>
+      <body className={`${inter.className} min-h-screen bg-gray-50`}>
         {showNav && (
-          <nav className="border-b border-neutral-800">
+          <nav className="border-b border-gray-200 bg-white">
             <NavigationMenu className="max-w-screen-xl mx-auto px-4">
               <NavigationMenuList className="flex gap-6 h-16 items-center">
                 <NavigationMenuItem>
                   <Link 
                     href="/tokens" 
-                    className={`hover:text-neutral-300 transition-colors ${
-                      pathname === "/tokens" ? "text-blue-500" : "text-neutral-400"
+                    className={`hover:text-gray-900 transition-colors ${
+                      pathname === "/tokens" ? "text-blue-600 font-medium" : "text-gray-600"
                     }`}
                   >
                     Home
@@ -37,10 +37,10 @@ export default function RootLayout({
                 <NavigationMenuItem>
                   <Link 
                     href="/tokens" 
-                    className={`hover:text-neutral-300 transition-colors ${
+                    className={`hover:text-gray-900 transition-colors ${
                       pathname.startsWith("/tokens") && pathname !== "/tokens" 
-                        ? "text-blue-500" 
-                        : "text-neutral-400"
+                        ? "text-blue-600 font-medium" 
+                        : "text-gray-600"
                     }`}
                   >
                     Tokens
@@ -49,8 +49,8 @@ export default function RootLayout({
                 <NavigationMenuItem>
                   <Link 
                     href="/settings" 
-                    className={`hover:text-neutral-300 transition-colors ${
-                      pathname === "/settings" ? "text-blue-500" : "text-neutral-400"
+                    className={`hover:text-gray-900 transition-colors ${
+                      pathname === "/settings" ? "text-blue-600 font-medium" : "text-gray-600"
                     }`}
                   >
                     Settings
@@ -67,9 +67,10 @@ export default function RootLayout({
           position="top-right"
           toastOptions={{
             style: {
-              background: "#1f2937",
-              color: "#f3f4f6",
-              border: "1px solid #374151"
+              background: "#ffffff",
+              color: "#111827",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
             }
           }}
         />
