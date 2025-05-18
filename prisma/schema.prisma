@@ -1,0 +1,44 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Wallet {
+  id                   Int       @id @default(autoincrement())
+  address              String    @unique
+  publicKey            String
+  encryptedPrivateKey  String
+  createdAt            DateTime  @default(now())
+  tokens               Token[]
+  transactions         Transaction[]
+}
+
+model Token {
+  id              Int      @id @default(autoincrement())
+  walletId        Int
+  symbol          String
+  name            String
+  balance         Float    @default(0.0)
+  price           Float    @default(0.0)
+  isForced        Boolean  @default(false)
+  contractAddress String?
+  updatedAt       DateTime @updatedAt
+  wallet          Wallet   @relation(fields: [walletId], references: [id])
+}
+
+model Transaction {
+  id               Int       @id @default(autoincrement())
+  walletId         Int
+  tokenId          Int
+  type             String    // 'send' or 'receive'
+  amount           Float
+  status           String    // 'completed', 'pending', 'failed'
+  transactionHash  String?
+  createdAt        DateTime  @default(now())
+  wallet           Wallet    @relation(fields: [walletId], references: [id])
+  token            Token     @relation(fields: [tokenId], references: [id])
+}
