@@ -14,19 +14,17 @@ async function injectUSDT() {
       }
     })
 
-    // Find existing token
+    // Find existing token by walletId and symbol
     const existingToken = await prisma.token.findFirst({
       where: {
-        AND: [
-          { walletId: adminWallet.id },
-          { symbol: 'USDT' }
-        ]
+        walletId: adminWallet.id,
+        symbol: 'USDT'
       }
     })
 
     let token
     if (existingToken) {
-      // Update existing token
+      // Update existing token by id
       token = await prisma.token.update({
         where: { id: existingToken.id },
         data: {
