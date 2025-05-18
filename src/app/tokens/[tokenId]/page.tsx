@@ -7,52 +7,61 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 
 interface TokenDetails {
-  id: string
+  id: number
   symbol: string
   name: string
-  balance: string
+  balance: number
   price: number
-  isForced?: boolean
-  icon: string
+  isForced: boolean
   transactions: {
-    id: string
+    id: number
     type: 'send' | 'receive'
-    amount: string
-    date: string
-    status: 'completed' | 'pending'
+    amount: number
+    createdAt: string
+    status: 'completed' | 'pending' | 'failed'
+    wallet: {
+      address: string
+    }
   }[]
 }
 
-// Mock data - replace with actual API call
-const mockTokenDetails: TokenDetails = {
-  id: "1",
-  symbol: "USDT",
-  name: "Tether USD",
-  balance: "1000.00",
-  price: 1.00,
-  isForced: true,
-  icon: "https://cryptologos.cc/logos/tether-usdt-logo.png",
-  transactions: [
-    {
-      id: "tx1",
-      type: "receive",
-      amount: "500.00",
-      date: "2024-03-20",
-      status: "completed"
-    },
-    {
-      id: "tx2",
-      type: "send",
-      amount: "200.00",
-      date: "2024-03-19",
-      status: "completed"
-    }
-  ]
+const tokenIcons: Record<string, string> = {
+  'USDT': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
+  'TRON': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/trx.png',
+  'BTC': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png',
+  'BNB': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png',
+  'SOL': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/sol.png',
+  'XRP': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xrp.png'
 }
 
 export default function TokenDetailsPage({ params }: { params: { tokenId: string } }) {
   const router = useRouter()
-  const [token, setToken] = useState<TokenDetails>(mockTokenDetails)
+  const [token, setToken] = useState<TokenDetails | null>(null)
+
+  useEffect(() => {
+    fetchTokenDetails()
+  }, [params.tokenId])
+
+  const fetchTokenDetails = async () => {
+    try {
+      const [tokenResponse, transactionsResponse] = await Promise.all([
+        fetch(`/api/tokens/${params.tokenId}`),
+        fetch(`/api/tokens/${params.tokenId}/send`)
+      ])
+
+      const tokenData = await tokenResponse.json()
+      const transactionsData = await transactionsResponse.json()
+
+      if (tokenData.success && transactionsData.success) {
+        setToken({
+          ...tokenData.data,
+          transactions: transactionsData.data
+        })
+      }
+    } catch (error) {
+      console.error('Failed to fetch token details:', error)
+    }
+  }
 
   const handleSend = () => {
     router.push(`/tokens/${params.tokenId}/send`)
@@ -62,25 +71,30 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
     router.push(`/tokens/${params.tokenId}/receive`)
   }
 
+  if (!token) {
+    return <div>Loading...</div>
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 p-6">
       <Button 
-        variant="ghost" 
+        variant="outline" 
         onClick={() => router.back()}
         className="mb-4"
       >
-        ← Back
+        Back
       </Button>
 
-      <Card className="bg-[#363b57] border-0">
+      <Card className="bg-[#2b2f45] border-0">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative w-12 h-12 bg-white rounded-full overflow-hidden">
                 <Image
-                  src={token.icon}
+                  src={tokenIcons[token.symbol] || tokenIcons['USDT']}
                   alt={`${token.symbol} icon`}
                   fill
+                  sizes="48px"
                   className="object-contain p-1"
                 />
               </div>
@@ -97,10 +111,10 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
             <p className="text-3xl font-bold">
-              {token.balance} {token.symbol}
+              {token.balance.toLocaleString()} {token.symbol}
             </p>
             <p className="text-gray-400">
-              ${(parseFloat(token.balance) * token.price).toLocaleString()} USD
+              ${(token.balance * token.price).toLocaleString()} USD
             </p>
           </div>
 
@@ -126,20 +140,29 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
               {token.transactions.map((tx) => (
                 <div 
                   key={tx.id}
-                  className="flex justify-between items-center p-3 rounded-lg bg-[#404663] hover:bg-[#454b6d] transition-colors"
+                  className="flex justify-between items-center p-3 rounded-lg bg-[#363b57] hover:bg-[#404663] transition-colors"
                 >
                   <div>
                     <p className="capitalize">{tx.type}</p>
-                    <p className="text-sm text-gray-400">{tx.date}</p>
+                    <p className="text-sm text-gray-400">
+                      {new Date(tx.createdAt).toLocaleString()}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className={tx.type === 'receive' ? 'text-green-500' : 'text-red-500'}>
-                      {tx.type === 'receive' ? '+' : '-'}{tx.amount} {token.symbol}
+                      {tx.type === 'receive' ? '+' : '-'}{tx.amount.toLocaleString()} {token.symbol}
                     </p>
-                    <p className="text-sm text-gray-400 capitalize">{tx.status}</p>
+                    <p className="text-sm text-gray-400 font-mono">
+                      {tx.wallet.address.slice(0, 6)}...{tx.wallet.address.slice(-4)}
+                    </p>
                   </div>
                 </div>
               ))}
+              {token.transactions.length === 0 && (
+                <div className="text-center text-gray-400 py-4">
+                  No transactions yet
+                </div>
+              )}
             </div>
           </div>
         </CardContent>

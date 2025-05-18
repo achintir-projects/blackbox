@@ -10,8 +10,8 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'cryptologos.cc',
-        pathname: '/logos/**',
+        hostname: 'raw.githubusercontent.com',
+        pathname: '/spothq/cryptocurrency-icons/**',
       },
     ],
   },

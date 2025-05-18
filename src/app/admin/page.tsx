@@ -4,31 +4,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface TokenInjection {
-  id: string
+  id: number
   symbol: string
-  amount: string
-  price: string
+  amount: number
+  price: number
   timestamp: string
+  token: {
+    id: number
+    symbol: string
+    name: string
+    balance: number
+    price: number
+  }
 }
 
-// Mock data - replace with actual API data
-const mockInjections: TokenInjection[] = [
-  {
-    id: "1",
-    symbol: "USDT",
-    amount: "10000",
-    price: "1.00",
-    timestamp: "2024-03-20 14:30:00"
-  }
-]
+const ADMIN_KEY = 'admin-secret' // In a real app, this would be stored securely
 
 export default function AdminPage() {
-  const [injections, setInjections] = useState<TokenInjection[]>(mockInjections)
+  const [injections, setInjections] = useState<TokenInjection[]>([])
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     symbol: "USDT",
@@ -36,25 +34,51 @@ export default function AdminPage() {
     price: ""
   })
 
+  useEffect(() => {
+    fetchInjections()
+  }, [])
+
+  const fetchInjections = async () => {
+    try {
+      const response = await fetch(`/api/admin?adminKey=${ADMIN_KEY}`)
+      const data = await response.json()
+      if (data.success) {
+        setInjections(data.data.injections)
+      } else {
+        toast.error("Failed to fetch injections")
+      }
+    } catch (error) {
+      toast.error("Failed to fetch injections")
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      // TODO: Implement actual token injection logic
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulated delay
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'inject',
+          adminKey: ADMIN_KEY,
+          symbol: formData.symbol,
+          amount: parseFloat(formData.amount),
+          price: parseFloat(formData.price)
+        }),
+      })
 
-      const newInjection: TokenInjection = {
-        id: Date.now().toString(),
-        symbol: formData.symbol,
-        amount: formData.amount,
-        price: formData.price,
-        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19)
+      const data = await response.json()
+      if (data.success) {
+        toast.success("Token injection successful!")
+        setFormData({ symbol: "USDT", amount: "", price: "" })
+        fetchInjections() // Refresh the list
+      } else {
+        toast.error(data.error || "Failed to inject tokens")
       }
-
-      setInjections(prev => [newInjection, ...prev])
-      setFormData({ symbol: "USDT", amount: "", price: "" })
-      toast.success("Token injection successful!")
     } catch (error) {
       toast.error("Failed to inject tokens. Please try again.")
     } finally {
@@ -63,10 +87,10 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 p-6">
       <h1 className="text-2xl font-bold">Admin Dashboard</h1>
 
-      <Card className="bg-[#2b2f45]">
+      <Card className="bg-[#2b2f45] border-0">
         <CardHeader>
           <CardTitle>Inject Tokens</CardTitle>
         </CardHeader>
@@ -79,6 +103,7 @@ export default function AdminPage() {
                   id="symbol"
                   value={formData.symbol}
                   disabled
+                  className="bg-[#363b57]"
                 />
               </div>
               <div>
@@ -93,6 +118,7 @@ export default function AdminPage() {
                     amount: e.target.value
                   }))}
                   required
+                  className="bg-[#363b57]"
                 />
               </div>
               <div>
@@ -108,17 +134,18 @@ export default function AdminPage() {
                     price: e.target.value
                   }))}
                   required
+                  className="bg-[#363b57]"
                 />
               </div>
             </div>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Processing..." : "Inject Tokens"}
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      <Card className="bg-[#2b2f45]">
+      <Card className="bg-[#2b2f45] border-0">
         <CardHeader>
           <CardTitle>Recent Injections</CardTitle>
         </CardHeader>
@@ -130,15 +157,17 @@ export default function AdminPage() {
                 <TableHead>Symbol</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Price (USD)</TableHead>
+                <TableHead>Total Value</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {injections.map((injection) => (
                 <TableRow key={injection.id}>
-                  <TableCell>{injection.timestamp}</TableCell>
+                  <TableCell>{new Date(injection.timestamp).toLocaleString()}</TableCell>
                   <TableCell>{injection.symbol}</TableCell>
-                  <TableCell>{injection.amount}</TableCell>
-                  <TableCell>${injection.price}</TableCell>
+                  <TableCell>{injection.amount.toLocaleString()}</TableCell>
+                  <TableCell>${injection.price.toFixed(2)}</TableCell>
+                  <TableCell>${(injection.amount * injection.price).toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

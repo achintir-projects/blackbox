@@ -1,22 +1,42 @@
 import { NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
 import axios from 'axios'
 
-// Mock database - in a real app, this would be a proper database
-let tokens = [
-  { id: "1", symbol: "USDT", name: "Tether USD", balance: "1000.00", price: 1.00, isForced: true },
-  { id: "2", symbol: "TRON", name: "TRON USDT", balance: "0.00", price: 1.00 },
-  { id: "3", symbol: "BTC", name: "Bitcoin", balance: "0.00", price: 45000.00 },
-  { id: "4", symbol: "BNB", name: "Binance Coin", balance: "0.00", price: 300.00 },
-  { id: "5", symbol: "SOL", name: "Solana", balance: "0.00", price: 100.00 },
-  { id: "6", symbol: "XRP", name: "Ripple", balance: "0.00", price: 0.50 }
-]
+const prisma = new PrismaClient()
 
-// GET /api/tokens - Get all tokens
+interface Token {
+  id: number;
+  walletId: number;
+  symbol: string;
+  name: string;
+  balance: number;
+  price: number;
+  isForced: boolean;
+  contractAddress?: string | null;
+  updatedAt: Date;
+}
+
+interface TokenResponse {
+  id: string;
+  symbol: string;
+  name: string;
+  balance: string;
+  price: number;
+  isForced: boolean;
+  contractAddress?: string | null;
+}
+
 export async function GET() {
   try {
-    // For non-forced tokens, fetch current prices from CoinGecko
+    const tokens = await prisma.token.findMany({
+      orderBy: {
+        symbol: 'asc'
+      }
+    })
+
+    // Update prices for non-forced tokens
     const updatedTokens = await Promise.all(
-      tokens.map(async (token) => {
+      tokens.map(async (token: Token) => {
         if (!token.isForced) {
           try {
             const response = await axios.get(
@@ -24,13 +44,21 @@ export async function GET() {
             )
             const price = response.data[token.symbol.toLowerCase()]?.usd
             if (price) {
+              await prisma.token.update({
+                where: { id: token.id },
+                data: { price }
+              })
               token.price = price
             }
           } catch (error) {
             console.error(`Failed to fetch price for ${token.symbol}:`, error)
           }
         }
-        return token
+        return {
+          ...token,
+          balance: token.balance.toString(),
+          id: token.id.toString()
+        }
       })
     )
 
@@ -47,7 +75,6 @@ export async function GET() {
   }
 }
 
-// POST /api/tokens - Add a new token
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -61,21 +88,37 @@ export async function POST(req: Request) {
       }, { status: 400 })
     }
 
-    // Create new token
-    const newToken = {
-      id: (tokens.length + 1).toString(),
-      symbol,
-      name,
-      balance: "0.00",
-      price: 0,
-      contractAddress
+    // Find default wallet
+    const wallet = await prisma.wallet.findFirst({
+      where: { address: 'default' }
+    })
+
+    if (!wallet) {
+      return NextResponse.json({
+        success: false,
+        error: 'No wallet found'
+      }, { status: 404 })
     }
 
-    tokens.push(newToken)
+    // Create new token
+    const token = await prisma.token.create({
+      data: {
+        symbol,
+        name,
+        contractAddress,
+        walletId: wallet.id,
+        balance: 0,
+        price: 0
+      }
+    })
 
     return NextResponse.json({
       success: true,
-      data: newToken
+      data: {
+        ...token,
+        balance: token.balance.toString(),
+        id: token.id.toString()
+      }
     })
   } catch (error) {
     console.error('Error adding token:', error)

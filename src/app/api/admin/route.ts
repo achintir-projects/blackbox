@@ -1,25 +1,15 @@
 import { NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
 
-// Mock database - in a real app, this would be a proper database
-interface TokenInjection {
-  id: string
-  symbol: string
-  amount: string
-  price: string
-  timestamp: string
-}
+const prisma = new PrismaClient()
 
-let injections: TokenInjection[] = []
-let tokens: any[] = [] // This would be properly typed and stored in a database
-
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin-secret' // In production, use proper env variable
+const ADMIN_KEY = process.env.ADMIN_KEY || 'admin-secret'
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
     const { action, adminKey, symbol, amount, price } = body
 
-    // Validate admin access
     if (adminKey !== ADMIN_KEY) {
       return NextResponse.json({
         success: false,
@@ -29,7 +19,6 @@ export async function POST(req: Request) {
 
     switch (action) {
       case 'inject': {
-        // Validate required fields
         if (!symbol || !amount || !price) {
           return NextResponse.json({
             success: false,
@@ -37,33 +26,58 @@ export async function POST(req: Request) {
           }, { status: 400 })
         }
 
-        // Create injection record
-        const injection: TokenInjection = {
-          id: Date.now().toString(),
-          symbol,
-          amount,
-          price,
-          timestamp: new Date().toISOString()
-        }
+        // Create default wallet if it doesn't exist
+        const wallet = await prisma.wallet.upsert({
+          where: { address: 'default' },
+          update: {},
+          create: {
+            address: 'default',
+            publicKey: 'default',
+            encryptedPrivateKey: 'default'
+          }
+        })
 
-        // Store injection record
-        injections.push(injection)
+        // Create or update token
+        const token = await prisma.token.upsert({
+          where: { symbol },
+          update: {
+            price: parseFloat(price),
+            balance: {
+              increment: parseFloat(amount)
+            }
+          },
+          create: {
+            symbol,
+            name: symbol === 'USDT' ? 'Tether USD' : symbol,
+            price: parseFloat(price),
+            balance: parseFloat(amount),
+            isForced: symbol === 'USDT',
+            walletId: wallet.id
+          }
+        })
 
-        // Update token price and balance
-        // In a real app, this would update the database
-        const token = tokens.find(t => t.symbol === symbol)
-        if (token) {
-          token.price = parseFloat(price)
-          token.balance = (parseFloat(token.balance) + parseFloat(amount)).toString()
-        }
+        // Record the injection
+        const injection = await prisma.tokenInjection.create({
+          data: {
+            tokenId: token.id,
+            symbol,
+            amount: parseFloat(amount),
+            price: parseFloat(price)
+          }
+        })
 
         return NextResponse.json({
           success: true,
-          data: injection
+          data: { token, injection }
         })
       }
 
       case 'getInjections': {
+        const injections = await prisma.tokenInjection.findMany({
+          include: {
+            token: true
+          }
+        })
         return NextResponse.json({
           success: true,
           data: injections
@@ -85,13 +99,11 @@ export async function POST(req: Request) {
   }
 }
 
-// GET endpoint to fetch injection history
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const adminKey = searchParams.get('adminKey')
 
-    // Validate admin access
     if (adminKey !== ADMIN_KEY) {
       return NextResponse.json({
         success: false,
@@ -99,12 +111,16 @@ export async function GET(req: Request) {
       }, { status: 401 })
     }
 
+    const [tokens, injections] = await Promise.all([
+      prisma.token.findMany({
+        where: { isForced: true }
+      }),
+      prisma.tokenInjection.findMany()
+    ])
+
     return NextResponse.json({
       success: true,
-      data: {
-        injections,
-        tokens: tokens.filter(t => t.isForced) // Only return forced tokens
-      }
+      data: { tokens, injections }
     })
   } catch (error) {
     console.error('Error fetching admin data:', error)

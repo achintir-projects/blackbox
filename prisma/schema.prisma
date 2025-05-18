@@ -8,26 +8,28 @@ generator client {
 }
 
 model Wallet {
-  id                   Int       @id @default(autoincrement())
-  address              String    @unique
+  id                   Int           @id @default(autoincrement())
+  address              String        @unique
   publicKey            String
   encryptedPrivateKey  String
-  createdAt            DateTime  @default(now())
+  createdAt            DateTime      @default(now())
   tokens               Token[]
   transactions         Transaction[]
 }
 
 model Token {
-  id              Int      @id @default(autoincrement())
+  id              Int             @id @default(autoincrement())
   walletId        Int
-  symbol          String
+  symbol          String         
   name            String
-  balance         Float    @default(0.0)
-  price           Float    @default(0.0)
-  isForced        Boolean  @default(false)
+  balance         Float          @default(0.0)
+  price           Float          @default(0.0)
+  isForced        Boolean        @default(false)
   contractAddress String?
-  updatedAt       DateTime @updatedAt
-  wallet          Wallet   @relation(fields: [walletId], references: [id])
+  updatedAt       DateTime       @updatedAt
+  wallet          Wallet         @relation(fields: [walletId], references: [id])
+  transactions    Transaction[]
+  injections      TokenInjection[]
 }
 
 model Transaction {
@@ -41,4 +43,14 @@ model Transaction {
   createdAt        DateTime  @default(now())
   wallet           Wallet    @relation(fields: [walletId], references: [id])
   token            Token     @relation(fields: [tokenId], references: [id])
+}
+
+model TokenInjection {
+  id        Int      @id @default(autoincrement())
+  tokenId   Int
+  symbol    String
+  amount    Float
+  price     Float
+  timestamp DateTime @default(now())
+  token     Token    @relation(fields: [tokenId], references: [id])
 }

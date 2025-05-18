@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 
@@ -19,61 +19,41 @@ interface Token {
   icon: string
 }
 
-const defaultTokens: Token[] = [
-  { 
-    id: "1", 
-    symbol: "USDT", 
-    name: "Tether USD", 
-    balance: "0.00", 
-    price: 1.00, 
-    icon: "https://cryptologos.cc/logos/tether-usdt-logo.png"
-  },
-  { 
-    id: "2", 
-    symbol: "TRON", 
-    name: "TRON USDT", 
-    balance: "0.00", 
-    price: 1.00,
-    icon: "https://cryptologos.cc/logos/tron-trx-logo.png"
-  },
-  { 
-    id: "3", 
-    symbol: "BTC", 
-    name: "Bitcoin", 
-    balance: "0.00", 
-    price: 45000.00,
-    icon: "https://cryptologos.cc/logos/bitcoin-btc-logo.png"
-  },
-  { 
-    id: "4", 
-    symbol: "BNB", 
-    name: "Binance Coin", 
-    balance: "0.00", 
-    price: 300.00,
-    icon: "https://cryptologos.cc/logos/bnb-bnb-logo.png"
-  },
-  { 
-    id: "5", 
-    symbol: "SOL", 
-    name: "Solana", 
-    balance: "0.00", 
-    price: 100.00,
-    icon: "https://cryptologos.cc/logos/solana-sol-logo.png"
-  },
-  { 
-    id: "6", 
-    symbol: "XRP", 
-    name: "Ripple", 
-    balance: "0.00", 
-    price: 0.50,
-    icon: "https://cryptologos.cc/logos/xrp-xrp-logo.png"
-  }
-]
+const tokenIcons: Record<string, string> = {
+  'USDT': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png',
+  'TRON': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/trx.png',
+  'BTC': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png',
+  'BNB': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png',
+  'SOL': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/sol.png',
+  'XRP': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xrp.png'
+}
 
 export default function TokensPage() {
-  const [tokens, setTokens] = useState<Token[]>(defaultTokens)
+  const [tokens, setTokens] = useState<Token[]>([])
   const [isAddingToken, setIsAddingToken] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    // Fetch tokens from the API
+    const fetchTokens = async () => {
+      try {
+        const response = await fetch('/api/tokens')
+        const data = await response.json()
+        if (data.success) {
+          // Add icons to tokens
+          const tokensWithIcons = data.data.map((token: Token) => ({
+            ...token,
+            icon: tokenIcons[token.symbol] || tokenIcons['USDT'] // fallback to USDT icon
+          }))
+          setTokens(tokensWithIcons)
+        }
+      } catch (error) {
+        console.error('Error fetching tokens:', error)
+      }
+    }
+
+    fetchTokens()
+  }, [])
 
   const handleTokenClick = (tokenId: string) => {
     router.push(`/tokens/${tokenId}`)
@@ -85,29 +65,43 @@ export default function TokensPage() {
     // TODO: Implement token addition logic
   }
 
+  // Calculate total portfolio value
+  const totalPortfolioValue = tokens.reduce((acc, token) => {
+    return acc + (parseFloat(token.balance) * token.price)
+  }, 0)
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold">My Tokens</h1>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">Add Token</Button>
-          </DialogTrigger>
-          <DialogContent className="bg-[#363b57]">
-            <DialogHeader>
-              <DialogTitle>Add New Token</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAddToken} className="space-y-4">
-              <div>
-                <Label htmlFor="contractAddress">Contract Address</Label>
-                <Input id="contractAddress" placeholder="Enter token contract address" className="bg-[#404663]" />
-              </div>
-              <Button type="submit" className="w-full">
-                Add Token
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-col md:flex-row items-end md:items-center gap-4">
+          <div className="text-right">
+            <p className="text-sm text-gray-400">Total Portfolio Value</p>
+            <p className="text-2xl font-bold">${totalPortfolioValue.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })}</p>
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">Add Token</Button>
+            </DialogTrigger>
+            <DialogContent className="bg-[#363b57]">
+              <DialogHeader>
+                <DialogTitle>Add New Token</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddToken} className="space-y-4">
+                <div>
+                  <Label htmlFor="contractAddress">Contract Address</Label>
+                  <Input id="contractAddress" placeholder="Enter token contract address" className="bg-[#404663]" />
+                </div>
+                <Button type="submit" className="w-full">
+                  Add Token
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -123,15 +117,13 @@ export default function TokensPage() {
                   src={token.icon}
                   alt={`${token.symbol} icon`}
                   fill
+                  sizes="(max-width: 768px) 40px, 40px"
                   className="object-contain p-1"
                 />
               </div>
               <div className="flex-1">
                 <CardTitle className="flex justify-between items-center">
                   <span>{token.symbol}</span>
-                  {token.isForced && (
-                    <span className="text-xs bg-blue-500 px-2 py-1 rounded">Forced</span>
-                  )}
                 </CardTitle>
                 <p className="text-sm text-gray-400">{token.name}</p>
               </div>
@@ -141,6 +133,9 @@ export default function TokensPage() {
                 <p className="text-lg font-bold">{token.balance} {token.symbol}</p>
                 <p className="text-sm text-gray-400">
                   ${token.price.toLocaleString()} USD
+                </p>
+                <p className="text-sm text-gray-400">
+                  Value: ${(parseFloat(token.balance) * token.price).toLocaleString()} USD
                 </p>
               </div>
             </CardContent>
