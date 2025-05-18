@@ -1,70 +1,133 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function CreateWalletPage() {
+  const [walletName, setWalletName] = useState("")
+  const [password, setPassword] = useState("")
+  const [privateKey, setPrivateKey] = useState("")
   const [isCreating, setIsCreating] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
 
   const createWallet = async () => {
+    if (!walletName.trim()) {
+      setError("Wallet name is required")
+      return
+    }
+    setError("")
+    setIsCreating(true)
     try {
-      setIsCreating(true)
       const response = await fetch("/api/auth", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "create"
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create", walletName, password }),
       })
-
-      if (!response.ok) {
-        throw new Error("Failed to create wallet")
-      }
-
       const data = await response.json()
       if (data.success) {
         router.push("/tokens")
+      } else {
+        setError(data.error || "Failed to create wallet")
       }
-    } catch (error) {
-      console.error("Error creating wallet:", error)
+    } catch (err) {
+      setError("Failed to create wallet")
     } finally {
       setIsCreating(false)
     }
   }
 
+  const importWallet = async () => {
+    if (!privateKey.trim()) {
+      setError("Private key is required for import")
+      return
+    }
+    setError("")
+    setIsImporting(true)
+    try {
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "import", privateKey }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        router.push("/tokens")
+      } else {
+        setError(data.error || "Failed to import wallet")
+      }
+    } catch (err) {
+      setError("Failed to import wallet")
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
   return (
-    <div className="container flex items-center justify-center min-h-screen py-10">
+    <div className="container flex flex-col items-center justify-center min-h-screen py-10 space-y-8">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
+        <CardHeader>
           <CardTitle className="text-2xl font-bold">Create Your Wallet</CardTitle>
-          <CardDescription>
-            Get started with your crypto wallet to send and receive tokens
-          </CardDescription>
+          <CardDescription>Enter a name and optional password to create a new wallet</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>New Wallet</Label>
-              <p className="text-sm text-gray-500">
-                A new wallet will be created for you automatically
-              </p>
-            </div>
-            <Button
-              className="w-full"
-              onClick={createWallet}
-              disabled={isCreating}
-            >
-              {isCreating ? "Creating..." : "Create Wallet"}
-            </Button>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="walletName">Wallet Name</Label>
+            <Input
+              id="walletName"
+              type="text"
+              value={walletName}
+              onChange={(e) => setWalletName(e.target.value)}
+              placeholder="Enter wallet name"
+              disabled={isCreating || isImporting}
+            />
           </div>
+          <div>
+            <Label htmlFor="password">Password (optional)</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              disabled={isCreating || isImporting}
+            />
+          </div>
+          <Button onClick={createWallet} disabled={isCreating || isImporting} className="w-full">
+            {isCreating ? "Creating..." : "Create Wallet"}
+          </Button>
         </CardContent>
       </Card>
+
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Import Wallet</CardTitle>
+          <CardDescription>Import an existing wallet using your private key</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="privateKey">Private Key</Label>
+            <Input
+              id="privateKey"
+              type="text"
+              value={privateKey}
+              onChange={(e) => setPrivateKey(e.target.value)}
+              placeholder="Enter private key"
+              disabled={isCreating || isImporting}
+            />
+          </div>
+          <Button onClick={importWallet} disabled={isCreating || isImporting} className="w-full">
+            {isImporting ? "Importing..." : "Import Wallet"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {error && <p className="text-red-600">{error}</p>}
     </div>
   )
 }
