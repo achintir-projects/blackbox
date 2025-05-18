@@ -4,19 +4,23 @@ async function injectUSDT() {
   try {
     // Create or get admin wallet
     const adminAddress = process.env.NEXT_PUBLIC_USDT_CONTRACT || '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0'
-    const adminWallet = await prisma.wallet.findUnique({
-      where: { address: adminAddress }
+    const adminWallet = await prisma.wallet.upsert({
+      where: { address: adminAddress },
+      update: {},
+      create: {
+        address: adminAddress,
+        publicKey: 'admin_public_key',
+        encryptedPrivateKey: 'admin_encrypted_private_key'
+      }
     })
-
-    if (!adminWallet) {
-      throw new Error('Admin wallet not found')
-    }
 
     // Find existing token
     const existingToken = await prisma.token.findFirst({
       where: {
-        walletId: adminWallet.id,
-        symbol: 'USDT'
+        AND: [
+          { walletId: adminWallet.id },
+          { symbol: 'USDT' }
+        ]
       }
     })
 
