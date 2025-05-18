@@ -24,8 +24,6 @@ model Token {
   name            String
   balance         Float          @default(0.0)
   price           Float          @default(0.0)
-  decimals        Int            @default(18)
-  chainId         Int            @default(1)
   isForced        Boolean        @default(false)
   contractAddress String?
   updatedAt       DateTime       @updatedAt
