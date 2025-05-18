@@ -36,7 +36,8 @@ export default function TokensPage() {
     // Fetch tokens from the API
     const fetchTokens = async () => {
       try {
-        const response = await fetch('/api/tokens')
+        const walletAddress = localStorage.getItem('walletAddress')
+        const response = await fetch(`/api/tokens?walletAddress=${walletAddress}`)
         const data = await response.json()
         if (data.success) {
           // Add icons to tokens

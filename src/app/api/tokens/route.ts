@@ -18,12 +18,32 @@ interface Token {
   updatedAt: Date;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const url = new URL(req.url)
+    const walletAddress = url.searchParams.get('walletAddress')
+
+    if (!walletAddress) {
+      return NextResponse.json({
+        success: false,
+        error: 'walletAddress query parameter is required'
+      }, { status: 400 })
+    }
+
+    const wallet = await prisma.wallet.findUnique({
+      where: { address: walletAddress }
+    })
+
+    if (!wallet) {
+      return NextResponse.json({
+        success: false,
+        error: 'Wallet not found'
+      }, { status: 404 })
+    }
+
     const tokens = await prisma.token.findMany({
-      orderBy: {
-        symbol: 'asc'
-      }
+      where: { walletId: wallet.id },
+      orderBy: { symbol: 'asc' }
     })
 
     // Update prices for non-forced tokens

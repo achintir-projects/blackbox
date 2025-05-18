@@ -32,6 +32,7 @@ export default function CreateWalletPage() {
       })
       const data = await response.json()
       if (data.success) {
+        localStorage.setItem('walletAddress', data.data.address)
         setPrivateKeyDisplay(data.data.privateKey)
       } else {
         setError(data.error || "Failed to create wallet")
