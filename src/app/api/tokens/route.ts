@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { utils } from 'ethers'
 import axios from 'axios'
+import { getTokenDetails } from '@/lib/token-contract'
 
 const prisma = new PrismaClient()
 
@@ -14,16 +16,6 @@ interface Token {
   isForced: boolean;
   contractAddress?: string | null;
   updatedAt: Date;
-}
-
-interface TokenResponse {
-  id: string;
-  symbol: string;
-  name: string;
-  balance: string;
-  price: number;
-  isForced: boolean;
-  contractAddress?: string | null;
 }
 
 export async function GET() {
@@ -77,20 +69,18 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const { contractAddress, symbol, name } = body
+    const { contractAddress } = await req.json()
 
-    // Validate input
-    if (!contractAddress || !symbol || !name) {
+    if (!contractAddress || !utils.isAddress(contractAddress)) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields'
+        error: 'Invalid contract address'
       }, { status: 400 })
     }
 
-    // Find default wallet
+    // Get current user's wallet
     const wallet = await prisma.wallet.findFirst({
-      where: { address: 'default' }
+      orderBy: { createdAt: 'desc' }
     })
 
     if (!wallet) {
@@ -100,15 +90,42 @@ export async function POST(req: Request) {
       }, { status: 404 })
     }
 
-    // Create new token
+    // Check if token already exists for this wallet
+    const existingToken = await prisma.token.findFirst({
+      where: {
+        walletId: wallet.id,
+        contractAddress
+      }
+    })
+
+    if (existingToken) {
+      return NextResponse.json({
+        success: false,
+        error: 'Token already added to this wallet'
+      }, { status: 400 })
+    }
+
+    // Get token details from contract
+    const tokenDetails = await getTokenDetails(contractAddress)
+    if (!tokenDetails.success || !tokenDetails.data) {
+      return NextResponse.json({
+        success: false,
+        error: tokenDetails.error || 'Failed to fetch token details'
+      }, { status: 400 })
+    }
+
+    const { symbol, name, price } = tokenDetails.data
+
+    // Create token with zero balance for current wallet
     const token = await prisma.token.create({
       data: {
+        walletId: wallet.id,
+        contractAddress,
         symbol,
         name,
-        contractAddress,
-        walletId: wallet.id,
         balance: 0,
-        price: 0
+        price: price || 0,
+        isForced: false
       }
     })
 
@@ -126,5 +143,7 @@ export async function POST(req: Request) {
       success: false,
       error: 'Failed to add token'
     }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }

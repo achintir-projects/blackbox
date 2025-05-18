@@ -10,7 +10,12 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
   images: {
-    domains: ['images.unsplash.com'],
+    domains: [
+      'images.unsplash.com',
+      'images.pexels.com',
+      'images.cryptocompare.com',
+      'cryptocompare.com'
+    ],
     minimumCacheTTL: 60,
   },
   async headers() {

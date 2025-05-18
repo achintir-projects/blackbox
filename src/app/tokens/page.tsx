@@ -58,10 +58,53 @@ export default function TokensPage() {
     router.push(`/tokens/${tokenId}`)
   }
 
-  const handleAddToken = (e: React.FormEvent) => {
+  const handleAddToken = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsAddingToken(false)
-    // TODO: Implement token addition logic
+    const form = e.target as HTMLFormElement
+    const contractAddressInput = form.contractAddress as HTMLInputElement
+    const contractAddress = contractAddressInput.value.trim()
+    if (!contractAddress) {
+      alert('Please enter a valid contract address')
+      return
+    }
+    try {
+      // Call API to get token details by contract address
+      const response = await fetch(`/api/tokens/contract/${contractAddress}`)
+      const data = await response.json()
+      if (!data.success) {
+        alert(data.error || 'Failed to fetch token details')
+        return
+      }
+      const tokenData = data.data
+
+      // Call API to add token to current user's wallet
+      const addResponse = await fetch('/api/tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractAddress }),
+      })
+      const addData = await addResponse.json()
+      if (!addData.success) {
+        alert(addData.error || 'Failed to add token')
+        return
+      }
+
+      // Refresh tokens list
+      const refreshedResponse = await fetch('/api/tokens')
+      const refreshedData = await refreshedResponse.json()
+      if (refreshedData.success) {
+        const tokensWithIcons = refreshedData.data.map((token: Token) => ({
+          ...token,
+          icon: tokenIcons[token.symbol] || tokenIcons['USDT']
+        }))
+        setTokens(tokensWithIcons)
+      }
+
+      setIsAddingToken(false)
+      alert(`Token ${tokenData.symbol} added successfully!`)
+    } catch (error) {
+      alert('Error adding token. Please try again.')
+    }
   }
 
   // Calculate total portfolio value
