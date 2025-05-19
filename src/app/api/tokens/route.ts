@@ -158,8 +158,6 @@ export async function POST(req: Request) {
         name,
         balance: 0,
         price: price || 0,
-        decimals: decimals || 18,
-        chainId: chainId || 1,
         isForced: false
       }
     })
