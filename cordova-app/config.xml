@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.example.myapp" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>MyApp</name>
+  <description>
+    A Cordova project to package the Next.js website as an Android app.
+  </description>
+  <author email="dev@example.com" href="http://example.com">
+    Developer
+  </author>
+  <content src="index.html" />
+  <access origin="*" />
+  <allow-navigation href="*" />
+  <plugin name="cordova-plugin-inappbrowser" spec="^5.0.0" />
+  <platform name="android">
+    <allow-intent href="market:*" />
+  </platform>
+  <preference name="DisallowOverscroll" value="true" />
+  <preference name="android-minSdkVersion" value="22" />
+  <preference name="BackupWebStorage" value="none" />
+  <preference name="SplashScreen" value="screen" />
+  <preference name="SplashScreenDelay" value="3000" />
+</widget>

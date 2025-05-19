@@ -1,0 +1,21 @@
+{
+  "name": "myapp",
+  "version": "1.0.0",
+  "description": "Cordova project to package Next.js website as Android app",
+  "main": "index.js",
+  "scripts": {
+    "start": "cordova run android",
+    "build": "cordova build android"
+  },
+  "devDependencies": {
+    "cordova-android": "^14.0.1",
+    "cordova-plugin-inappbrowser": "^5.0.0"
+  },
+  "cordova": {
+    "plugins": [],
+    "platforms": [
+      "android"
+    ]
+  },
+  "dependencies": {}
+}

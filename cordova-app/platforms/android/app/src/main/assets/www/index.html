@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline'; style-src * 'self' 'unsafe-inline'; media-src *" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>MyApp Webview</title>
+  <script type="text/javascript" src="cordova.js"></script>
+  <script type="text/javascript">
+    document.addEventListener('deviceready', function() {
+      var ref = cordova.InAppBrowser.open('https://blackbox-dusky.vercel.app', '_blank', 'location=no,toolbar=no');
+    }, false);
+  </script>
+</head>
+<body>
+  <h1>Loading...</h1>
+</body>
+</html>
