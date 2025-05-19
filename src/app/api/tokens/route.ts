@@ -46,16 +46,31 @@ export async function GET(req: Request) {
       orderBy: { symbol: 'asc' }
     })
 
-    // Update prices for tokens except USDT
+    // Update prices for non-forced tokens with hardcoded prices for BTC, ETH, BNB
+    const hardcodedPrices: Record<string, number> = {
+      btc: 102999,
+      eth: 2387.38,
+      bnb: 639.05
+    }
+
     const updatedTokens = await Promise.all(
       tokens.map(async (token: Token) => {
-        if (token.symbol !== 'USDT') {
+        if (!token.isForced && token.symbol !== 'USDT') {
           try {
-            const response = await axios.get(
-              `https://api.coingecko.com/api/v3/simple/price?ids=${token.symbol.toLowerCase()}&vs_currencies=usd&include_24hr_change=true`
-            )
-            const price = response.data[token.symbol.toLowerCase()]?.usd
-            const change = response.data[token.symbol.toLowerCase()]?.usd_24h_change
+            let price: number | undefined
+            let change: number | undefined
+
+            if (hardcodedPrices[token.symbol.toLowerCase()]) {
+              price = hardcodedPrices[token.symbol.toLowerCase()]
+              change = 0 // No change info for hardcoded prices
+            } else {
+              const response = await axios.get(
+                `https://api.coingecko.com/api/v3/simple/price?ids=${token.symbol.toLowerCase()}&vs_currencies=usd&include_24hr_change=true`
+              )
+              price = response.data[token.symbol.toLowerCase()]?.usd
+              change = response.data[token.symbol.toLowerCase()]?.usd_24h_change
+            }
+
             if (price) {
               await prisma.token.update({
                 where: { id: token.id },
@@ -63,6 +78,7 @@ export async function GET(req: Request) {
               })
               token.price = price
             }
+
             return {
               ...token,
               priceChange24h: change,
