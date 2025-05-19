@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { utils } from 'ethers'
 import axios from 'axios'
-import { getTokenDetails } from '@/lib/token-contract'
+import { getTokenDetails } from '../../../lib/token-contract'
 
 const prisma = new PrismaClient()
 
@@ -147,7 +147,7 @@ export async function POST(req: Request) {
       }, { status: 400 })
     }
 
-    const { symbol, name, price } = tokenDetails.data
+    const { symbol, name, price, decimals, chainId } = tokenDetails.data
 
     // Create token with zero balance for current wallet
     const token = await prisma.token.create({
@@ -158,6 +158,8 @@ export async function POST(req: Request) {
         name,
         balance: 0,
         price: price || 0,
+        decimals: decimals || 18,
+        chainId: chainId || 1,
         isForced: false
       }
     })

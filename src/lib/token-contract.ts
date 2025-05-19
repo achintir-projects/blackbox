@@ -22,9 +22,11 @@ export async function getTokenDetails(contractAddress: string) {
   const contract = new Contract(contractAddress, ERC20_ABI, provider)
 
   try {
-    const [symbol, name] = await Promise.all([
+    const [symbol, name, decimals, network] = await Promise.all([
       contract.symbol(),
-      contract.name()
+      contract.name(),
+      contract.decimals(),
+      provider.getNetwork()
     ])
 
     // Try to get price from CoinGecko
@@ -43,7 +45,9 @@ export async function getTokenDetails(contractAddress: string) {
       data: {
         symbol,
         name,
-        price
+        price,
+        decimals,
+        chainId: network.chainId
       }
     }
   } catch (error) {

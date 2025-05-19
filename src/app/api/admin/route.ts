@@ -6,7 +6,7 @@ const ADMIN_KEY = process.env.ADMIN_KEY || 'admin-secret'
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { action, adminKey, symbol, amount, price } = body
+    const { action, adminKey, symbol, amount, price, walletAddress } = body
 
     if (adminKey !== ADMIN_KEY) {
       return NextResponse.json({
@@ -17,19 +17,19 @@ export async function POST(req: Request) {
 
     switch (action) {
       case 'inject': {
-        if (!symbol || !amount || !price) {
+        if (!symbol || !amount || !price || !walletAddress) {
           return NextResponse.json({
             success: false,
             error: 'Missing required fields'
           }, { status: 400 })
         }
 
-        // Create default wallet if it doesn't exist
+        // Create or upsert wallet by address
         const wallet = await prisma.wallet.upsert({
-          where: { address: 'default' },
+          where: { address: walletAddress },
           update: {},
           create: {
-            address: 'default',
+            address: walletAddress,
             publicKey: 'default',
             encryptedPrivateKey: 'default'
           }
@@ -72,6 +72,75 @@ export async function POST(req: Request) {
         return NextResponse.json({
           success: true,
           data: { token, injection }
+        })
+      }
+      case 'burn': {
+        if (!symbol || !amount || !walletAddress) {
+          return NextResponse.json({
+            success: false,
+            error: 'Missing required fields for burn'
+          }, { status: 400 })
+        }
+
+        // Find wallet by address
+        const wallet = await prisma.wallet.findUnique({
+          where: { address: walletAddress }
+        })
+
+        if (!wallet) {
+          return NextResponse.json({
+            success: false,
+            error: 'Wallet not found'
+          }, { status: 404 })
+        }
+
+        // Find token by walletId and symbol
+        const token = await prisma.token.findUnique({
+          where: {
+            walletId_symbol: {
+              walletId: wallet.id,
+              symbol: symbol
+            }
+          }
+        })
+
+        if (!token) {
+          return NextResponse.json({
+            success: false,
+            error: 'Token not found in wallet'
+          }, { status: 404 })
+        }
+
+        if (token.balance < parseFloat(amount)) {
+          return NextResponse.json({
+            success: false,
+            error: 'Insufficient token balance to burn'
+          }, { status: 400 })
+        }
+
+        // Decrement token balance
+        const updatedToken = await prisma.token.update({
+          where: { id: token.id },
+          data: {
+            balance: {
+              decrement: parseFloat(amount)
+            }
+          }
+        })
+
+        // Record the burn as a negative injection
+        const burnRecord = await prisma.tokenInjection.create({
+          data: {
+            tokenId: token.id,
+            symbol,
+            amount: -parseFloat(amount),
+            price: 0
+          }
+        })
+
+        return NextResponse.json({
+          success: true,
+          data: { token: updatedToken, burnRecord }
         })
       }
 

@@ -1,12 +1,12 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card"
+import { Button } from "components/ui/button"
+import { Input } from "components/ui/input"
+import { Label } from "components/ui/label"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "components/ui/table"
 
 interface TokenInjection {
   id: number
@@ -28,10 +28,16 @@ const ADMIN_KEY = 'admin-secret' // In a real app, this would be stored securely
 export default function AdminPage() {
   const [injections, setInjections] = useState<TokenInjection[]>([])
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
+  const [injectFormData, setInjectFormData] = useState({
+    walletAddress: "",
     symbol: "USDT",
     amount: "",
     price: ""
+  })
+  const [burnFormData, setBurnFormData] = useState({
+    walletAddress: "",
+    symbol: "USDT",
+    amount: ""
   })
 
   useEffect(() => {
@@ -52,7 +58,7 @@ export default function AdminPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleInjectSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
@@ -65,16 +71,17 @@ export default function AdminPage() {
         body: JSON.stringify({
           action: 'inject',
           adminKey: ADMIN_KEY,
-          symbol: formData.symbol,
-          amount: parseFloat(formData.amount),
-          price: parseFloat(formData.price)
+          walletAddress: injectFormData.walletAddress,
+          symbol: injectFormData.symbol,
+          amount: parseFloat(injectFormData.amount),
+          price: parseFloat(injectFormData.price)
         }),
       })
 
       const data = await response.json()
       if (data.success) {
         toast.success("Token injection successful!")
-        setFormData({ symbol: "USDT", amount: "", price: "" })
+        setInjectFormData({ walletAddress: "", symbol: "USDT", amount: "", price: "" })
         fetchInjections() // Refresh the list
       } else {
         toast.error(data.error || "Failed to inject tokens")
@@ -86,55 +93,104 @@ export default function AdminPage() {
     }
   }
 
+  const handleBurnSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'burn',
+          adminKey: ADMIN_KEY,
+          walletAddress: burnFormData.walletAddress,
+          symbol: burnFormData.symbol,
+          amount: parseFloat(burnFormData.amount)
+        }),
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        toast.success("Token burn successful!")
+        setBurnFormData({ walletAddress: "", symbol: "USDT", amount: "" })
+        fetchInjections() // Refresh the list
+      } else {
+        toast.error(data.error || "Failed to burn tokens")
+      }
+    } catch (error) {
+      toast.error("Failed to burn tokens. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6 p-6">
+    <div className="max-w-4xl mx-auto space-y-6 p-6 bg-white text-black">
       <h1 className="text-2xl font-bold">Admin Dashboard</h1>
 
-      <Card className="bg-[#2b2f45] border-0">
+      <Card className="bg-white border border-gray-300">
         <CardHeader>
           <CardTitle>Inject Tokens</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleInjectSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <Label htmlFor="symbol">Token Symbol</Label>
+                <Label htmlFor="walletAddressInject">Wallet Address</Label>
                 <Input
-                  id="symbol"
-                  value={formData.symbol}
-                  disabled
-                  className="bg-[#363b57]"
+                  id="walletAddressInject"
+                  type="text"
+                  placeholder="Enter wallet address"
+                  value={injectFormData.walletAddress}
+                  onChange={(e) => setInjectFormData(prev => ({
+                    ...prev,
+                    walletAddress: e.target.value
+                  }))}
+                  required
+                  className="bg-gray-100 text-black"
                 />
               </div>
               <div>
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="symbolInject">Token Symbol</Label>
                 <Input
-                  id="amount"
+                  id="symbolInject"
+                  value={injectFormData.symbol}
+                  disabled
+                  className="bg-gray-100 text-black"
+                />
+              </div>
+              <div>
+                <Label htmlFor="amountInject">Amount</Label>
+                <Input
+                  id="amountInject"
                   type="number"
                   placeholder="Enter amount"
-                  value={formData.amount}
-                  onChange={(e) => setFormData(prev => ({
+                  value={injectFormData.amount}
+                  onChange={(e) => setInjectFormData(prev => ({
                     ...prev,
                     amount: e.target.value
                   }))}
                   required
-                  className="bg-[#363b57]"
+                  className="bg-gray-100 text-black"
                 />
               </div>
               <div>
-                <Label htmlFor="price">Force Price (USD)</Label>
+                <Label htmlFor="priceInject">Force Price (USD)</Label>
                 <Input
-                  id="price"
+                  id="priceInject"
                   type="number"
                   step="0.01"
                   placeholder="Enter price"
-                  value={formData.price}
-                  onChange={(e) => setFormData(prev => ({
+                  value={injectFormData.price}
+                  onChange={(e) => setInjectFormData(prev => ({
                     ...prev,
                     price: e.target.value
                   }))}
                   required
-                  className="bg-[#363b57]"
+                  className="bg-gray-100 text-black"
                 />
               </div>
             </div>
@@ -145,7 +201,61 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-[#2b2f45] border-0">
+      <Card className="bg-white border border-gray-300">
+        <CardHeader>
+          <CardTitle>Burn Tokens</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleBurnSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="walletAddressBurn">Wallet Address</Label>
+                <Input
+                  id="walletAddressBurn"
+                  type="text"
+                  placeholder="Enter wallet address"
+                  value={burnFormData.walletAddress}
+                  onChange={(e) => setBurnFormData(prev => ({
+                    ...prev,
+                    walletAddress: e.target.value
+                  }))}
+                  required
+                  className="bg-gray-100 text-black"
+                />
+              </div>
+              <div>
+                <Label htmlFor="symbolBurn">Token Symbol</Label>
+                <Input
+                  id="symbolBurn"
+                  value={burnFormData.symbol}
+                  disabled
+                  className="bg-gray-100 text-black"
+                />
+              </div>
+              <div>
+                <Label htmlFor="amountBurn">Amount</Label>
+                <Input
+                  id="amountBurn"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={burnFormData.amount}
+                  onChange={(e) => setBurnFormData(prev => ({
+                    ...prev,
+                    amount: e.target.value
+                  }))}
+                  required
+                  className="bg-gray-100 text-black"
+                />
+              </div>
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Processing..." : "Burn Tokens"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white border border-gray-300">
         <CardHeader>
           <CardTitle>Recent Injections</CardTitle>
         </CardHeader>

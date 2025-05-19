@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { ethers } from 'ethers'
-import { initUserWallet } from '@/lib/init-user-wallet'
+import { initUserWallet } from '../../../lib/init-user-wallet'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
