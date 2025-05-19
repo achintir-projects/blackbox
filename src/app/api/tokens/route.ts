@@ -46,10 +46,10 @@ export async function GET(req: Request) {
       orderBy: { symbol: 'asc' }
     })
 
-    // Update prices for non-forced tokens
+    // Update prices for tokens except USDT
     const updatedTokens = await Promise.all(
       tokens.map(async (token: Token) => {
-        if (!token.isForced && token.symbol !== 'USDT') {
+        if (token.symbol !== 'USDT') {
           try {
             const response = await axios.get(
               `https://api.coingecko.com/api/v3/simple/price?ids=${token.symbol.toLowerCase()}&vs_currencies=usd&include_24hr_change=true`
