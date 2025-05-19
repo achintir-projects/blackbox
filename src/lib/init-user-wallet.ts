@@ -15,14 +15,14 @@ const DEFAULT_TOKENS = [
     symbol: 'BTC',
     name: 'Bitcoin',
     balance: 0,
-    price: 102,999.00,
+    price: 102999.00,
     isForced: true
   },
   {
     symbol: 'ETH',
     name: 'Ethereum',
     balance: 0,
-    price: 2,387.38,
+    price: 2387.38,
     isForced: true
   },
   {
