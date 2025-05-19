@@ -1,3 +1,4 @@
+import prisma from 'src/lib/prisma'
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
@@ -8,9 +9,9 @@ export async function GET(
   { params }: { params: { tokenId: string } }
 ) {
   try {
-    const { tokenId } = await params
+    const { tokenId } = params
     const id = parseInt(tokenId)
-    
+
     const token = await prisma.token.findUnique({
       where: { id },
       include: {
@@ -21,7 +22,8 @@ export async function GET(
           },
           include: {
             wallet: true
-          }
+          },
+          take: 20
         }
       }
     })
