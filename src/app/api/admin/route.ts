@@ -163,7 +163,7 @@ export async function POST(req: Request) {
         }, { status: 400 })
     }
   } catch (error: any) {
-    console.error('Admin API error:', error)
+    console.error('Admin API error:', error.message, error.stack)
     return NextResponse.json({
       success: false,
       error: 'Internal server error'
