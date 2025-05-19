@@ -1,4 +1,4 @@
-import prisma from 'src/lib/prisma'
+import prisma from '../../lib/prisma'
 import { NextResponse } from 'next/server'
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin-secret'
