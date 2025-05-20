@@ -30,7 +30,7 @@ export default function SendPage({ params }: { params: { tokenId: string } }) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [formData, setFormData] = useState({
     receiverWalletAddress: "",
-    Amount: ""
+    amount: ""
   })
 
   const fetchTransactions = async () => {
@@ -63,14 +63,14 @@ export default function SendPage({ params }: { params: { tokenId: string } }) {
         },
         body: JSON.stringify({
           receiverWalletAddress: formData.receiverWalletAddress,
-          Amount: parseFloat(formData.Amount)
+          amount: parseFloat(formData.amount)
         }),
       })
 
       const data = await response.json()
       if (data.success) {
         toast.success("Transfer successful!")
-        setFormData({ receiverWalletAddress: "", Amount: "" })
+        setFormData({ receiverWalletAddress: "", amount: "" })
         fetchTransactions()
         router.refresh() // Refresh page to update balances
       } else {
@@ -115,16 +115,16 @@ export default function SendPage({ params }: { params: { tokenId: string } }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="Amount" className="text-gray-700 font-medium">Amount</Label>
+                <Label htmlFor="amount" className="text-gray-700 font-medium">Amount</Label>
                 <Input
-                  id="Amount"
+                  id="amount"
                   type="number"
                   step="0.000001"
                   placeholder="Enter amount to send"
-                  value={formData.Amount}
+                  value={formData.amount}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    Amount: e.target.value
+                    amount: e.target.value
                   }))}
                   required
                   className="bg-white border-gray-300 h-12 text-gray-900 placeholder:text-gray-400"
