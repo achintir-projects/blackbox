@@ -1,16 +1,23 @@
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '../../auth/[...nextauth]/route'
 import prisma from '../../../../../lib/prisma'
 
 export async function POST(req: Request, context: { params: { tokenId: string } }) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user?.address) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { tokenId } = context.params
     const body = await req.json()
-    const { receiverWalletAddress, amount, senderWalletAddress } = body
+    const { receiverWalletAddress, amount } = body
 
-    if (!receiverWalletAddress || !amount || !senderWalletAddress) {
+    if (!receiverWalletAddress || !amount) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields: receiverWalletAddress, amount, senderWalletAddress'
+        error: 'Missing required fields: receiverWalletAddress, amount'
       }, { status: 400 })
     }
 
@@ -21,9 +28,9 @@ export async function POST(req: Request, context: { params: { tokenId: string } 
       }, { status: 400 })
     }
 
-    // Find sender wallet by address
+    // Find sender wallet by address from session
     const senderWallet = await prisma.wallet.findUnique({
-      where: { address: senderWalletAddress }
+      where: { address: session.user.address }
     })
 
     if (!senderWallet) {
