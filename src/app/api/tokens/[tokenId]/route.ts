@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
+const prisma = new (await import('@prisma/client')).PrismaClient()
 
 export async function GET(
   req: Request,
   { params }: { params: { tokenId: string } }
 ) {
   try {
-    const { tokenId } = await params
+    const { tokenId } = params
     const id = parseInt(tokenId)
     
     const token = await prisma.token.findUnique({
