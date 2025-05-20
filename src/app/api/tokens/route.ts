@@ -22,6 +22,66 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
     const walletAddress = url.searchParams.get('walletAddress')
+    const tokenIdParam = url.searchParams.get('tokenId')
+
+    if (tokenIdParam) {
+      const tokenId = parseInt(tokenIdParam)
+      const token = await prisma.token.findUnique({
+        where: { id: tokenId }
+      })
+
+      if (!token) {
+        return NextResponse.json({
+          success: false,
+          error: 'Token not found'
+        }, { status: 404 })
+      }
+
+      // Update price for token if needed
+      const hardcodedPrices: Record<string, number> = {
+        btc: 102999,
+        eth: 2387.38,
+        bnb: 639.05
+      }
+
+      let price: number | undefined
+      let change: number | undefined
+
+      if (!token.isForced && token.symbol !== 'USDT') {
+        try {
+          if (hardcodedPrices[token.symbol.toLowerCase()]) {
+            price = hardcodedPrices[token.symbol.toLowerCase()]
+            change = 0
+          } else {
+            const response = await axios.get(
+              `https://api.coingecko.com/api/v3/simple/price?ids=${token.symbol.toLowerCase()}&vs_currencies=usd&include_24hr_change=true`
+            )
+            price = response.data[token.symbol.toLowerCase()]?.usd
+            change = response.data[token.symbol.toLowerCase()]?.usd_24h_change
+          }
+
+          if (price) {
+            await prisma.token.update({
+              where: { id: token.id },
+              data: { price }
+            })
+            token.price = price
+          }
+        } catch (error) {
+          console.error(`Failed to fetch price for ${token.symbol}:`, error)
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...token,
+          priceChange24h: change,
+          balance: token.balance.toString(),
+          id: token.id.toString()
+        }
+      })
+    }
 
     if (!walletAddress) {
       return NextResponse.json({
