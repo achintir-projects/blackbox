@@ -5,12 +5,12 @@ export async function POST(req: Request, context: { params: { tokenId: string } 
   try {
     const { tokenId } = context.params
     const body = await req.json()
-    const { receiverWalletAddress, amount } = body
+    const { receiverWalletAddress, amount, senderWalletAddress } = body
 
-    if (!receiverWalletAddress || !amount) {
+    if (!receiverWalletAddress || !amount || !senderWalletAddress) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields: receiverWalletAddress, amount'
+        error: 'Missing required fields: receiverWalletAddress, amount, senderWalletAddress'
       }, { status: 400 })
     }
 
@@ -20,10 +20,6 @@ export async function POST(req: Request, context: { params: { tokenId: string } 
         error: 'Amount must be greater than zero'
       }, { status: 400 })
     }
-
-    // Placeholder: get sender wallet address from auth/session/context
-    // For now, assume a fixed sender wallet address (should be replaced with real auth)
-    const senderWalletAddress = '0xYourSenderWalletAddressHere'
 
     // Find sender wallet by address
     const senderWallet = await prisma.wallet.findUnique({
