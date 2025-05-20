@@ -29,8 +29,8 @@ export default function SendPage({ params }: { params: { tokenId: string } }) {
   const [loading, setLoading] = useState(false)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [formData, setFormData] = useState({
-    recipient: "",
-    amount: ""
+    receiverWalletAddress: "",
+    Amount: ""
   })
 
   const fetchTransactions = async () => {
@@ -62,15 +62,15 @@ export default function SendPage({ params }: { params: { tokenId: string } }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          recipient: formData.recipient,
-          amount: parseFloat(formData.amount)
+          receiverWalletAddress: formData.receiverWalletAddress,
+          Amount: parseFloat(formData.Amount)
         }),
       })
 
       const data = await response.json()
       if (data.success) {
         toast.success("Transfer successful!")
-        setFormData({ recipient: "", amount: "" })
+        setFormData({ receiverWalletAddress: "", Amount: "" })
         fetchTransactions()
         router.refresh() // Refresh page to update balances
       } else {
@@ -101,30 +101,30 @@ export default function SendPage({ params }: { params: { tokenId: string } }) {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-6">
               <div className="space-y-2">
-                <Label htmlFor="recipient" className="text-gray-700 font-medium">Recipient Address</Label>
+                <Label htmlFor="receiverWalletAddress" className="text-gray-700 font-medium">Recipient Address</Label>
                 <Input
-                  id="recipient"
+                  id="receiverWalletAddress"
                   placeholder="Enter recipient's wallet address"
-                  value={formData.recipient}
+                  value={formData.receiverWalletAddress}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    recipient: e.target.value
+                    receiverWalletAddress: e.target.value
                   }))}
                   required
                   className="bg-white border-gray-300 h-12 text-gray-900 font-mono text-sm placeholder:text-gray-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount" className="text-gray-700 font-medium">Amount</Label>
+                <Label htmlFor="Amount" className="text-gray-700 font-medium">Amount</Label>
                 <Input
-                  id="amount"
+                  id="Amount"
                   type="number"
                   step="0.000001"
                   placeholder="Enter amount to send"
-                  value={formData.amount}
+                  value={formData.Amount}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    amount: e.target.value
+                    Amount: e.target.value
                   }))}
                   required
                   className="bg-white border-gray-300 h-12 text-gray-900 placeholder:text-gray-400"
