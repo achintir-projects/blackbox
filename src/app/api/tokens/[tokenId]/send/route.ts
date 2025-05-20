@@ -1,16 +1,21 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../../../../lib/prisma'
 
-const prisma = new PrismaClient()
 
 export async function GET(req: Request, context: { params: { tokenId: string } }) {
   try {
-    const tokenId = parseInt(context.params.tokenId)
+    const { tokenId } = context.params
+
     const transactions = await prisma.transaction.findMany({
-      where: { tokenId },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        tokenId: Number(tokenId),
+        type: 'send'
+      },
       include: {
         wallet: true
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     })
 
@@ -19,12 +24,10 @@ export async function GET(req: Request, context: { params: { tokenId: string } }
       data: transactions
     })
   } catch (error) {
-    console.error('Error fetching transactions:', error)
+    console.error('Error fetching send transactions:', error)
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch transactions'
+      error: 'Failed to fetch send transactions'
     }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }

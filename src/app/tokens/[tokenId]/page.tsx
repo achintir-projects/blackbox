@@ -1,7 +1,6 @@
 "use client"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
+import { Button } from "../../../components/ui/button"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import Image from "next/image"
@@ -42,25 +41,28 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
   }, [params.tokenId])
 
   const fetchTokenDetails = async () => {
+  try {
+    const tokenResponse = await fetch(`/api/tokens?tokenId=${params.tokenId}`)
+    const tokenData = await tokenResponse.json()
+
+    let transactionsData = { success: false, data: [] }
     try {
-      const [tokenResponse, transactionsResponse] = await Promise.all([
-        fetch(`/api/tokens?tokenId=${params.tokenId}`),
-        fetch(`/api/tokens/${params.tokenId}/send`)
-      ])
-
-      const tokenData = await tokenResponse.json()
-      const transactionsData = await transactionsResponse.json()
-
-      if (tokenData.success && transactionsData.success) {
-        setToken({
-          ...tokenData.data,
-          transactions: transactionsData.data
-        })
-      }
+      const transactionsResponse = await fetch(`/api/tokens/${params.tokenId}/send`)
+      transactionsData = await transactionsResponse.json()
     } catch (error) {
-      console.error('Failed to fetch token details:', error)
+      console.error('Failed to fetch transactions:', error)
     }
+
+    if (tokenData.success) {
+      setToken({
+        ...tokenData.data,
+        transactions: transactionsData.success ? transactionsData.data : []
+      })
+    }
+  } catch (error) {
+    console.error('Failed to fetch token details:', error)
   }
+}
 
   const handleSend = () => {
     router.push(`/tokens/${params.tokenId}/send`)
