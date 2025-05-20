@@ -44,7 +44,7 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
   const fetchTokenDetails = async () => {
     try {
       const [tokenResponse, transactionsResponse] = await Promise.all([
-        fetch(`/api/tokens/${params.tokenId}`),
+        fetch(`/api/tokens?tokenId=${params.tokenId}`),
         fetch(`/api/tokens/${params.tokenId}/send`)
       ])
 
