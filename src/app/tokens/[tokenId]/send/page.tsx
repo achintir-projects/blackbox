@@ -1,1 +1,87 @@
-import React, { useState } from 'react'\nimport { useRouter } from 'next/navigation'\nimport { useSession, signIn, signOut } from 'next-auth/react'\n\nexport default function SendTokenPage({ params }: { params: { tokenId: string } }) {\n  const { tokenId } = params\n  const router = useRouter()\n  const { data: session } = useSession()\n\n  const [receiverWalletAddress, setReceiverWalletAddress] = useState('')\n  const [amount, setAmount] = useState(0)\n  const [error, setError] = useState('')\n  const [success, setSuccess] = useState('')\n\n  const handleSend = async () => {\n    setError('')\n    setSuccess('')\n\n    if (!session) {\n      setError('You must be signed in to send tokens.')\n      return\n    }\n\n    if (!receiverWalletAddress || amount <= 0) {\n      setError('Please enter a valid receiver address and amount.')\n      return\n    }\n\n    try {\n      const response = await fetch(`/api/tokens/${tokenId}/send`, {\n        method: 'POST',\n        headers: {\n          'Content-Type': 'application/json'\n        },\n        body: JSON.stringify({ receiverWalletAddress, amount })\n      })\n\n      const data = await response.json()\n\n      if (data.success) {\n        setSuccess('Tokens sent successfully!')\n        setReceiverWalletAddress('')\n        setAmount(0)\n        router.refresh()\n      } else {\n        setError(data.error || 'Failed to send tokens')\n      }\n    } catch (err) {\n      setError('An error occurred while sending tokens')\n    }\n  }\n\n  if (!session) {\n    return (\n      <div>\n        <p>You must be signed in to send tokens.</p>\n        <button onClick={() => signIn()}>Sign In</button>\n      </div>\n    )\n  }\n\n  return (\n    <div>\n      <h1>Send Token</h1>\n      {error && <p style={{ color: 'red' }}>{error}</p>}\n      {success && <p style={{ color: 'green' }}>{success}</p>}\n      <div>\n        <label>Receiver Wallet Address:</label>\n        <input\n          type=\"text\"\n          value={receiverWalletAddress}\n          onChange={(e) => setReceiverWalletAddress(e.target.value)}\n        />\n      </div>\n      <div>\n        <label>Amount:</label>\n        <input\n          type=\"number\"\n          value={amount}\n          onChange={(e) => setAmount(Number(e.target.value))}\n        />\n      </div>\n      <button onClick={handleSend}>Send</button>\n      <button onClick={() => signOut()}>Sign Out</button>\n    </div>\n  )\n}\n
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSession, signIn, signOut } from 'next-auth/react'
+
+export default function SendTokenPage({ params }: { params: { tokenId: string } }) {
+  const { tokenId } = params
+  const router = useRouter()
+  const { data: session } = useSession()
+
+  const [receiverWalletAddress, setReceiverWalletAddress] = useState('')
+  const [amount, setAmount] = useState(0)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const handleSend = async () => {
+    setError('')
+    setSuccess('')
+
+    if (!session) {
+      setError('You must be signed in to send tokens.')
+      return
+    }
+
+    if (!receiverWalletAddress || amount <= 0) {
+      setError('Please enter a valid receiver address and amount.')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/tokens/${tokenId}/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ receiverWalletAddress, amount })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccess('Tokens sent successfully!')
+        setReceiverWalletAddress('')
+        setAmount(0)
+        router.refresh()
+      } else {
+        setError(data.error || 'Failed to send tokens')
+      }
+    } catch (err) {
+      setError('An error occurred while sending tokens')
+    }
+  }
+
+  if (!session) {
+    return (
+      <div>
+        <p>You must be signed in to send tokens.</p>
+        <button onClick={() => signIn()}>Sign In</button>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <h1>Send Token</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {success && <p style={{ color: 'green' }}>{success}</p>}
+      <div>
+        <label>Receiver Wallet Address:</label>
+        <input
+          type="text"
+          value={receiverWalletAddress}
+          onChange={(e) => setReceiverWalletAddress(e.target.value)}
+        />
+      </div>
+      <div>
+        <label>Amount:</label>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(Number(e.target.value))}
+        />
+      </div>
+      <button onClick={handleSend}>Send</button>
+      <button onClick={() => signOut()}>Sign Out</button>
+    </div>
+  )
+}
