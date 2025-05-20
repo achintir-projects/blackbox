@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server'
 import prisma from '../../../../../lib/prisma'
 
-export async function POST(req: Request) {
+export async function POST(req: Request, context: { params: { tokenId: string } }) {
   try {
+    const { tokenId } = context.params
     const body = await req.json()
-    const { senderWalletAddress, receiverWalletAddress, amount, tokenSymbol = 'USDT' } = body
+    const { receiverWalletAddress, amount } = body
 
-    if (!senderWalletAddress || !receiverWalletAddress || !amount) {
+    if (!receiverWalletAddress || !amount) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields: senderWalletAddress, receiverWalletAddress, amount'
+        error: 'Missing required fields: receiverWalletAddress, amount'
       }, { status: 400 })
     }
 
@@ -19,6 +20,10 @@ export async function POST(req: Request) {
         error: 'Amount must be greater than zero'
       }, { status: 400 })
     }
+
+    // Placeholder: get sender wallet address from auth/session/context
+    // For now, assume a fixed sender wallet address (should be replaced with real auth)
+    const senderWalletAddress = '0xYourSenderWalletAddressHere'
 
     // Find sender wallet by address
     const senderWallet = await prisma.wallet.findUnique({
@@ -44,22 +49,22 @@ export async function POST(req: Request) {
       }, { status: 404 })
     }
 
-    // Fetch sender token balance by walletId and token symbol
-    const senderToken = await prisma.token.findFirst({
+    // Find token by tokenId and sender wallet
+    const token = await prisma.token.findFirst({
       where: {
-        walletId: senderWallet.id,
-        symbol: tokenSymbol
+        id: Number(tokenId),
+        walletId: senderWallet.id
       }
     })
 
-    if (!senderToken) {
+    if (!token) {
       return NextResponse.json({
         success: false,
-        error: 'Sender token not found'
+        error: 'Token not found for sender wallet'
       }, { status: 404 })
     }
 
-    if (senderToken.balance < amount) {
+    if (token.balance < amount) {
       return NextResponse.json({
         success: false,
         error: 'Insufficient balance'
@@ -70,7 +75,7 @@ export async function POST(req: Request) {
     let receiverToken = await prisma.token.findFirst({
       where: {
         walletId: receiverWallet.id,
-        symbol: tokenSymbol
+        symbol: token.symbol
       }
     })
 
@@ -78,12 +83,12 @@ export async function POST(req: Request) {
       receiverToken = await prisma.token.create({
         data: {
           walletId: receiverWallet.id,
-          symbol: tokenSymbol,
-          name: senderToken.name,
+          symbol: token.symbol,
+          name: token.name,
           balance: 0,
-          price: senderToken.price,
-          isForced: senderToken.isForced,
-          contractAddress: senderToken.contractAddress
+          price: token.price,
+          isForced: token.isForced,
+          contractAddress: token.contractAddress
         }
       })
     }
@@ -91,8 +96,8 @@ export async function POST(req: Request) {
     // Update balances atomically
     await prisma.$transaction([
       prisma.token.update({
-        where: { id: senderToken.id },
-        data: { balance: senderToken.balance - amount }
+        where: { id: token.id },
+        data: { balance: token.balance - amount }
       }),
       prisma.token.update({
         where: { id: receiverToken.id },
@@ -100,7 +105,7 @@ export async function POST(req: Request) {
       }),
       prisma.transaction.create({
         data: {
-          tokenId: senderToken.id,
+          tokenId: token.id,
           walletId: senderWallet.id,
           type: 'send',
           amount,
