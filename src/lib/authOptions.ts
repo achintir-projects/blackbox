@@ -1,6 +1,10 @@
 import CredentialsProvider from "next-auth/providers/credentials"
 import prisma from "./prisma"
-import type { AuthOptions } from "next-auth"
+import type { AuthOptions, User } from "next-auth"
+
+interface ExtendedUser extends User {
+  address: string
+}
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -9,7 +13,7 @@ export const authOptions: AuthOptions = {
       credentials: {
         address: { label: "Wallet Address", type: "text", placeholder: "0x..." },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials, req): Promise<ExtendedUser | null> {
         if (!credentials?.address) {
           return null
         }
@@ -17,7 +21,7 @@ export const authOptions: AuthOptions = {
           where: { address: credentials.address }
         })
         if (wallet) {
-          return { id: wallet.id.toString(), name: wallet.address }
+          return { id: wallet.id.toString(), name: wallet.address, address: wallet.address } as ExtendedUser
         }
         return null
       },
@@ -30,12 +34,12 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.address = user.name
+        token.address = (user as ExtendedUser).address
       }
       return token
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && typeof token.id === "string" && typeof token.address === "string") {
         session.user.id = token.id
         session.user.address = token.address
       }

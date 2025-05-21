@@ -54,7 +54,7 @@ export async function POST(req: Request, { params }: { params: { tokenId: string
         data: { balance: { decrement: amount } }
       })
 
-      const receiverToken = await tx.token.findUnique({
+      let receiverToken = await tx.token.findUnique({
         where: {
           walletId_symbol: {
             walletId: receiverWallet.id,
@@ -69,7 +69,7 @@ export async function POST(req: Request, { params }: { params: { tokenId: string
           data: { balance: { increment: amount } }
         })
       } else {
-        await tx.token.create({
+        receiverToken = await tx.token.create({
           data: {
             walletId: receiverWallet.id,
             symbol: params.tokenId.toUpperCase(),
@@ -91,7 +91,7 @@ export async function POST(req: Request, { params }: { params: { tokenId: string
           },
           {
             walletId: receiverWallet.id,
-            tokenId: receiverToken ? receiverToken.id : undefined,
+            tokenId: receiverToken.id,
             type: "receive",
             amount,
             status: "completed"
@@ -102,6 +102,6 @@ export async function POST(req: Request, { params }: { params: { tokenId: string
 
     return new Response(JSON.stringify({ success: true }), { status: 200 })
   } catch (error) {
-    return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 })
+    return new Response(JSON.stringify({ error: "Internal server error", details: error instanceof Error ? error.message : String(error) }), { status: 500 })
   }
 }
