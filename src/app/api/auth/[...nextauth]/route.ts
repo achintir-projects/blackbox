@@ -27,14 +27,14 @@ const authOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }: { token: any; user: any }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id
         token.address = user.name
       }
       return token
     },
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (token) {
         session.user.id = token.id
         session.user.address = token.address
