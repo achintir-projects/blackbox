@@ -1,4 +1,4 @@
-import { authOptions } from "../../../../lib/authOptions"
+import authOptions from "../../../../lib/authOptions"
 import { getServerSession } from "next-auth/next"
 import prisma from "../../../../../lib/prisma"
 
@@ -47,9 +47,6 @@ export async function POST(req: Request, { params }: { params: { tokenId: string
     if (!receiverWallet) {
       return new Response(JSON.stringify({ error: "Receiver wallet not found" }), { status: 404 })
     }
-
-    // Perform token transfer logic here (update balances, create transactions, etc.)
-    // For simplicity, assuming synchronous updates
 
     await prisma.$transaction(async (tx) => {
       await tx.token.update({
