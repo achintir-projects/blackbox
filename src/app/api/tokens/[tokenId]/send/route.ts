@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
-import { authOptions } from '../../auth/[...nextauth]/route'
+import { authOptions } from '../../../auth/[...nextauth]/route'
 import prisma from '../../../../../lib/prisma'
 
 export async function POST(req: Request, context: { params: { tokenId: string } }) {
@@ -17,14 +17,14 @@ export async function POST(req: Request, context: { params: { tokenId: string } 
     if (!receiverWalletAddress || !amount) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields: receiverWalletAddress, amount'
+        error: 'Missing required fields: receiverWalletAddress and amount are required'
       }, { status: 400 })
     }
 
     if (amount <= 0) {
       return NextResponse.json({
         success: false,
-        error: 'Amount must be greater than zero'
+        error: 'Amount must be a number greater than zero'
       }, { status: 400 })
     }
 
@@ -36,7 +36,7 @@ export async function POST(req: Request, context: { params: { tokenId: string } 
     if (!senderWallet) {
       return NextResponse.json({
         success: false,
-        error: 'Sender wallet not found'
+        error: 'Sender wallet not found for the authenticated user'
       }, { status: 404 })
     }
 
@@ -48,7 +48,7 @@ export async function POST(req: Request, context: { params: { tokenId: string } 
     if (!receiverWallet) {
       return NextResponse.json({
         success: false,
-        error: 'Receiver wallet not found'
+        error: 'Receiver wallet not found for the provided address'
       }, { status: 404 })
     }
 
@@ -63,14 +63,14 @@ export async function POST(req: Request, context: { params: { tokenId: string } 
     if (!token) {
       return NextResponse.json({
         success: false,
-        error: 'Token not found for sender wallet'
+        error: 'Token not found for the sender wallet'
       }, { status: 404 })
     }
 
     if (token.balance < amount) {
       return NextResponse.json({
         success: false,
-        error: 'Insufficient balance'
+        error: 'Insufficient token balance in sender wallet'
       }, { status: 400 })
     }
 
