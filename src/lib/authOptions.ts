@@ -1,7 +1,8 @@
 import CredentialsProvider from "next-auth/providers/credentials"
 import prisma from "./prisma"
+import type { AuthOptions } from "next-auth"
 
-export const authOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Wallet",
@@ -23,7 +24,7 @@ export const authOptions = {
     }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
   },
   callbacks: {
     async jwt({ token, user }) {
