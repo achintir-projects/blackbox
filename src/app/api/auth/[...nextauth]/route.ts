@@ -2,7 +2,7 @@ import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import prisma from "../../../../lib/prisma"
 
-const authOptions = {
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Wallet",
