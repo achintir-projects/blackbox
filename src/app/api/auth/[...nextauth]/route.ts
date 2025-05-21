@@ -2,14 +2,14 @@ import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import prisma from "../../../../lib/prisma"
 
-export const authOptions = {
+const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Wallet",
       credentials: {
         address: { label: "Wallet Address", type: "text", placeholder: "0x..." },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.address) {
           return null
         }
@@ -17,7 +17,7 @@ export const authOptions = {
           where: { address: credentials.address }
         })
         if (wallet) {
-          return { id: wallet.id, name: wallet.address }
+          return { id: wallet.id.toString(), name: wallet.address }
         }
         return null
       },
