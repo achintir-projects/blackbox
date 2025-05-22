@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { signIn } from "next-auth/react"
+import { Button } from "../components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
 
 export default function CreateWalletPage() {
   const [walletName, setWalletName] = useState("")
@@ -17,7 +18,8 @@ export default function CreateWalletPage() {
   const [privateKeyDisplay, setPrivateKeyDisplay] = useState("")
   const router = useRouter()
 
-  const createWallet = async () => {
+  const createWallet = async (e: React.FormEvent<HTMLButtonElement>) => {
+    e.preventDefault()
     if (!walletName.trim()) {
       setError("Wallet name is required")
       return
@@ -34,6 +36,7 @@ export default function CreateWalletPage() {
       if (data.success) {
         localStorage.setItem('walletAddress', data.data.address)
         setPrivateKeyDisplay(data.data.privateKey)
+        await signIn("credentials", { address: data.data.address, redirect: false })
       } else {
         setError(data.error || "Failed to create wallet")
       }
@@ -44,7 +47,8 @@ export default function CreateWalletPage() {
     }
   }
 
-  const importWallet = async () => {
+  const importWallet = async (e: React.FormEvent<HTMLButtonElement>) => {
+    e.preventDefault()
     if (!privateKey.trim()) {
       setError("Private key is required for import")
       return
@@ -59,6 +63,7 @@ export default function CreateWalletPage() {
       })
       const data = await response.json()
       if (data.success) {
+        await signIn("credentials", { address: data.data.address, redirect: false })
         router.push("/tokens")
       } else {
         setError(data.error || "Failed to import wallet")
