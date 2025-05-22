@@ -1,7 +1,5 @@
-const { PrismaClient } = require('@prisma/client')
+const prisma = require('../src/lib/prisma').default
 const crypto = require('crypto')
-
-const prisma = new PrismaClient()
 
 const DEFAULT_TOKENS = [
   {
