@@ -96,7 +96,8 @@ async function initUserWallet(userAddress = null, userPublicKey = null, userPriv
     console.error('Failed to initialize user wallet:', error)
     throw error
   } finally {
-    await prisma.$disconnect()
+    // Removed prisma.$disconnect() to prevent premature disconnection causing delayed writes
+    // await prisma.$disconnect()
   }
 }
 
