@@ -41,6 +41,8 @@ async function initUserWallet(userAddress = null, userPublicKey = null, userPriv
     const publicKey = userPublicKey || crypto.createHash('sha256').update(privateKey).digest('hex')
     const address = userAddress || '0x' + crypto.createHash('sha256').update(publicKey).digest('hex').slice(0, 40)
     
+    console.log('Starting wallet initialization for address:', address)
+
     // Check if wallet already exists
     let wallet = await prisma.wallet.findUnique({
       where: { address }
@@ -48,6 +50,7 @@ async function initUserWallet(userAddress = null, userPublicKey = null, userPriv
 
     // Create new wallet if it doesn't exist
     if (!wallet) {
+      console.log('Wallet not found, creating new wallet for address:', address)
       wallet = await prisma.wallet.create({
         data: {
           address,
@@ -55,6 +58,7 @@ async function initUserWallet(userAddress = null, userPublicKey = null, userPriv
           encryptedPrivateKey: privateKey // In a real app, this would be encrypted
         }
       })
+      console.log('Wallet created:', wallet)
     }
 
     // Create default tokens with zero balances
