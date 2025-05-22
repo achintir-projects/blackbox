@@ -36,7 +36,13 @@ export default function CreateWalletPage() {
       if (data.success) {
         localStorage.setItem('walletAddress', data.data.address)
         setPrivateKeyDisplay(data.data.privateKey)
-        // Await signIn after setting privateKeyDisplay to ensure wallet creation completes
+        // Call wallet creation API to persist wallet in DB
+        await fetch('/api/wallets/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: data.data.address }),
+        })
+        // Await signIn after wallet creation
         await signIn("credentials", { address: data.data.address, redirect: false })
       } else {
         setError(data.error || "Failed to create wallet")
@@ -64,6 +70,12 @@ export default function CreateWalletPage() {
       })
       const data = await response.json()
       if (data.success) {
+        // Call wallet creation API to persist wallet in DB
+        await fetch('/api/wallets/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: data.data.address }),
+        })
         await signIn("credentials", { address: data.data.address, redirect: false })
         router.push("/tokens")
       } else {
