@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 
@@ -13,6 +13,23 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
   const [amount, setAmount] = useState(0)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  // New state to track if the send API call is in progress
+  const [isSending, setIsSending] = useState(false)
+
+  // New effect to log network requests for debugging
+  useEffect(() => {
+    const handleFetch = async () => {
+      const originalFetch = window.fetch
+      window.fetch = async (...args) => {
+        console.log('Fetch called with args:', args)
+        const response = await originalFetch(...args)
+        console.log('Fetch response:', response)
+        return response
+      }
+    }
+    handleFetch()
+  }, [])
 
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -29,6 +46,13 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
       return
     }
 
+    if (isSending) {
+      setError('Send request already in progress. Please wait.')
+      return
+    }
+
+    setIsSending(true)
+
     try {
       const response = await fetch(`/api/tokens/${tokenId}/send`, {
         method: 'POST',
@@ -38,7 +62,15 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
         body: JSON.stringify({ receiverWalletAddress, amount })
       })
 
-      const data = await response.json()
+      const text = await response.text()
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (jsonError) {
+        setError('Invalid JSON response from server')
+        setIsSending(false)
+        return
+      }
 
       if (data.success) {
         setSuccess('Tokens sent successfully!')
@@ -50,6 +82,8 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
       }
     } catch (err) {
       setError('An error occurred while sending tokens')
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -74,6 +108,7 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
             type="text"
             value={receiverWalletAddress}
             onChange={(e) => setReceiverWalletAddress(e.target.value)}
+            disabled={isSending}
           />
         </div>
         <div>
@@ -82,10 +117,11 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
             type="number"
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
+            disabled={isSending}
           />
         </div>
-        <button type="submit">Send</button>
-        <button type="button" onClick={() => signOut()}>Sign Out</button>
+        <button type="submit" disabled={isSending}>Send</button>
+        <button type="button" onClick={() => signOut()} disabled={isSending}>Sign Out</button>
       </form>
     </div>
   )
