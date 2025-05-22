@@ -87,7 +87,7 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
     }
   }
 
-  if (!session.data) {
+  if (!session || !session.data) {
     return (
       <div>
         <p>You must be signed in to send tokens.</p>
