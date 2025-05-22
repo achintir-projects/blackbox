@@ -47,7 +47,7 @@ export default function TokenDetailsPage({ params }: { params: { tokenId: string
 
     let transactionsData = { success: false, data: [] }
     try {
-      const transactionsResponse = await fetch(`/api/tokens/${params.tokenId}/send`)
+      const transactionsResponse = await fetch(`/api/tokens/${params.tokenId}/transactions`)
       transactionsData = await transactionsResponse.json()
     } catch (error) {
       console.error('Failed to fetch transactions:', error)
