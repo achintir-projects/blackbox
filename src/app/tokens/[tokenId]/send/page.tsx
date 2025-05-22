@@ -7,7 +7,7 @@ import { useSession, signIn, signOut } from 'next-auth/react'
 export default function SendTokenPage({ params }: { params: { tokenId: string } }) {
   const { tokenId } = params
   const router = useRouter()
-  const { data: session } = useSession()
+  const session = useSession()
 
   const [receiverWalletAddress, setReceiverWalletAddress] = useState('')
   const [amount, setAmount] = useState(0)
@@ -19,7 +19,7 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
     setError('')
     setSuccess('')
 
-    if (!session) {
+    if (!session.data) {
       setError('You must be signed in to send tokens.')
       return
     }
@@ -53,7 +53,7 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
     }
   }
 
-  if (!session) {
+  if (!session.data) {
     return (
       <div>
         <p>You must be signed in to send tokens.</p>
