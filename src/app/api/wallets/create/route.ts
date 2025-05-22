@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Address is required' }, { status: 400 })
     }
 
-    const { wallet, tokens } = await initUserWallet(address, null, null)
+    const { wallet, tokens } = await initUserWallet(address)
 
     console.log('Wallet creation successful:', wallet)
 
