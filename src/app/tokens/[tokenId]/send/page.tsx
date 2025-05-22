@@ -14,7 +14,8 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const handleSend = async () => {
+  const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
     setError('')
     setSuccess('')
 
@@ -66,24 +67,26 @@ export default function SendTokenPage({ params }: { params: { tokenId: string } 
       <h1>Send Token</h1>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {success && <p style={{ color: 'green' }}>{success}</p>}
-      <div>
-        <label>Receiver Wallet Address:</label>
-        <input
-          type="text"
-          value={receiverWalletAddress}
-          onChange={(e) => setReceiverWalletAddress(e.target.value)}
-        />
-      </div>
-      <div>
-        <label>Amount:</label>
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(Number(e.target.value))}
-        />
-      </div>
-      <button onClick={handleSend}>Send</button>
-      <button onClick={() => signOut()}>Sign Out</button>
+      <form onSubmit={handleSend}>
+        <div>
+          <label>Receiver Wallet Address:</label>
+          <input
+            type="text"
+            value={receiverWalletAddress}
+            onChange={(e) => setReceiverWalletAddress(e.target.value)}
+          />
+        </div>
+        <div>
+          <label>Amount:</label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+          />
+        </div>
+        <button type="submit">Send</button>
+        <button type="button" onClick={() => signOut()}>Sign Out</button>
+      </form>
     </div>
   )
 }
