@@ -36,6 +36,7 @@ export default function CreateWalletPage() {
       if (data.success) {
         localStorage.setItem('walletAddress', data.data.address)
         setPrivateKeyDisplay(data.data.privateKey)
+        // Await signIn after setting privateKeyDisplay to ensure wallet creation completes
         await signIn("credentials", { address: data.data.address, redirect: false })
       } else {
         setError(data.error || "Failed to create wallet")
