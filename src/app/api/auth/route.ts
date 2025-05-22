@@ -6,9 +6,12 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { action, walletName, password, privateKey } = body
 
+    console.log('Auth API POST called with action:', action)
+
     if (action === 'create') {
       // Create new wallet and initialize tokens
       const { wallet, tokens } = await initUserWallet()
+      console.log('Wallet created in auth API:', wallet)
 
       return NextResponse.json({
         success: true,
@@ -27,6 +30,7 @@ export async function POST(req: Request) {
 
       // Import wallet by private key and initialize tokens
       const { wallet, tokens } = await initUserWallet(null, null, privateKey)
+      console.log('Wallet imported in auth API:', wallet)
 
       return NextResponse.json({
         success: true,
