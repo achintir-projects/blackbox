@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { initUserWallet } from '../../../lib/init-user-wallet'
+import { initUserWallet } from '@/lib/init-user-wallet'
 
 export async function POST(req: Request) {
   try {
