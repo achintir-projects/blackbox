@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from './prisma'
 import crypto from 'crypto'
-
-const prisma = new PrismaClient()
 
 const DEFAULT_TOKENS = [
   {
@@ -15,41 +13,50 @@ const DEFAULT_TOKENS = [
     symbol: 'BTC',
     name: 'Bitcoin',
     balance: 0,
-    price: 102999.00,
+    price: 102700.05,
     isForced: true
   },
   {
     symbol: 'ETH',
     name: 'Ethereum',
     balance: 0,
-    price: 2387.38,
+    price: 2350.10,
     isForced: true
   },
   {
     symbol: 'BNB',
     name: 'Binance Coin',
     balance: 0,
-    price: 639.05,
+    price: 635.20,
     isForced: true
   }
 ]
 
-export async function initUserWallet(userAddress: string, userPublicKey: string, userPrivateKey: string) {
+export async function initUserWallet(userAddress: string | null = null, userPublicKey: string | null = null, userPrivateKey: string | null = null) {
   try {
+    // Generate wallet keys if not provided
+    const privateKey = userPrivateKey || crypto.randomBytes(32).toString('hex')
+    const publicKey = userPublicKey || crypto.createHash('sha256').update(privateKey).digest('hex')
+    const address = userAddress || '0x' + crypto.createHash('sha256').update(publicKey).digest('hex').slice(0, 40)
+    
+    console.log('Starting wallet initialization for address:', address)
+
     // Check if wallet already exists
     let wallet = await prisma.wallet.findUnique({
-      where: { address: userAddress }
+      where: { address }
     })
 
     // Create new wallet if it doesn't exist
     if (!wallet) {
+      console.log('Wallet not found, creating new wallet for address:', address)
       wallet = await prisma.wallet.create({
         data: {
-          address: userAddress,
-          publicKey: userPublicKey,
-          encryptedPrivateKey: userPrivateKey // In a real app, this would be encrypted
+          address,
+          publicKey,
+          encryptedPrivateKey: privateKey // In a real app, this would be encrypted
         }
       })
+      console.log('Wallet created:', wallet)
     }
 
     // Create default tokens with zero balances
@@ -74,11 +81,19 @@ export async function initUserWallet(userAddress: string, userPublicKey: string,
       }
     }
 
+    console.log('Initialized user wallet with zero-balance tokens:', {
+      wallet: {
+        address: wallet.address,
+        publicKey: wallet.publicKey
+      },
+      tokens
+    })
+
     return { wallet, tokens }
   } catch (error) {
     console.error('Failed to initialize user wallet:', error)
     throw error
-  } finally {
-    await prisma.$disconnect()
   }
 }
+
+export default initUserWallet

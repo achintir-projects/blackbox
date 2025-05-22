@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import initUserWallet from '../../../../../scripts/init-user-wallet.js'
+import { initUserWallet } from '../../../lib/init-user-wallet'
 
 export async function POST(req: Request) {
   try {
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Address is required' }, { status: 400 })
     }
 
-    const { wallet, tokens } = await initUserWallet(address)
+    const { wallet, tokens } = await initUserWallet(address, null, null)
 
     console.log('Wallet creation successful:', wallet)
 
