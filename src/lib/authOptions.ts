@@ -23,6 +23,16 @@ export const authOptions: AuthOptions = {
         if (wallet) {
           return { id: wallet.id.toString(), name: wallet.address, address: wallet.address } as ExtendedUser
         }
+        // Wallet not found, create it
+        try {
+          const { default: initUserWallet } = await import('../../scripts/init-user-wallet.js')
+          const { wallet: newWallet } = await initUserWallet(credentials.address)
+          if (newWallet) {
+            return { id: newWallet.id.toString(), name: newWallet.address, address: newWallet.address } as ExtendedUser
+          }
+        } catch (error) {
+          console.error('Error creating wallet in authorize:', error)
+        }
         return null
       },
     }),
