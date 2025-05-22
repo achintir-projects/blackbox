@@ -26,7 +26,7 @@ export const authOptions: AuthOptions = {
         // Wallet not found, create it
         try {
           const { default: initUserWallet } = await import('../../scripts/init-user-wallet.js')
-          const { wallet: newWallet } = await initUserWallet(credentials.address)
+          const { wallet: newWallet } = await initUserWallet(credentials.address as unknown as null | undefined)
           if (newWallet) {
             return { id: newWallet.id.toString(), name: newWallet.address, address: newWallet.address } as ExtendedUser
           }
